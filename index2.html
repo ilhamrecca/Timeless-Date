@@ -138,13 +138,13 @@
             height: 100vh; max-height: 100vh; overflow: hidden; padding: 0; 
         }
         #couple-section .section-title { 
-            margin-top: 10vh; /* Adds critical breathing room from the border */
+            margin-top: 10vh; 
         }
         
         .couple-container {
             display: flex; align-items: center; justify-content: center;
             max-width: 1400px; width: 100%; position: relative; z-index: 5;
-            height: 80vh; /* Restricts the contents so they don't stretch */
+            height: 80vh; 
         }
         .couple-image-wrapper { flex-shrink: 0; position: relative; z-index: 2; height: 100%; display: flex; align-items: center; }
         
@@ -241,10 +241,20 @@
             .gold-border-frame { background-size: 40px 40px; top: 2vh; bottom: 2vh; left: 3vw; right: 3vw; }
             #couple-section .section-title { margin-top: 3vh; }
 
+            /* --- MOBILE OVERFLOW FIX: Removed Left/Right Absolute Positions --- */
             .couple-container { flex-direction: column; justify-content: flex-start; height: auto; padding-top: 1rem; }
-            .couple-text { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 100%; max-width: 100%; margin: 1rem 0; padding: 1.5rem; }
-            .groom-bio { border-left: none; border-top: 2px solid var(--gold); margin-bottom: 0; }
-            .bride-bio { border-right: none; border-bottom: 2px solid var(--gold); margin-top: 0; }
+            .couple-text { 
+                position: relative !important; 
+                top: auto !important; 
+                left: 0 !important; 
+                right: 0 !important; 
+                bottom: auto !important; 
+                width: 90% !important; 
+                margin: 0.5rem auto !important; 
+                padding: 1.5rem !important; 
+            }
+            .groom-bio { border-left: none !important; border-top: 2px solid var(--gold) !important; }
+            .bride-bio { border-right: none !important; border-bottom: 2px solid var(--gold) !important; }
             
             .couple-image { height: auto; width: 100%; max-height: 40vh; transform: scale(1.15); margin: 0.5rem 0; }
             
@@ -434,11 +444,10 @@
         const composer = new THREE.EffectComposer(renderer);
         composer.addPass(new THREE.RenderPass(scene, camera));
         
-        // CRITICAL FIX: Drastically lowered maxblur and aperture so photos are sharp
         const bokehPass = new THREE.BokehPass(scene, camera, { 
             focus: 20.0, 
-            aperture: 0.0001,  // Deep depth of field = sharper images
-            maxblur: 0.005,    // Removed extreme blur
+            aperture: 0.0001,  
+            maxblur: 0.005,    
             width: window.innerWidth, 
             height: window.innerHeight 
         });
@@ -500,7 +509,6 @@
         let isUserScrollLocked = false;
         let autoScrollTween;
         let isInsideTunnel = false;
-        let rideComplete = false;
         let allowTunnelReset = false;
 
         // --- 5. Interlude Scroll Lock ---
@@ -531,11 +539,10 @@
         window.addEventListener('wheel', interceptScroll, {passive: false});
         window.addEventListener('keydown', interceptScroll, {passive: false});
 
-        // --- 6. The Safari-Bulletproof Auto-Scroll ---
+        // --- 6. The Chevron Gateway & Safari Scroll Fix ---
         document.getElementById('scroll-to-photos').addEventListener('click', () => {
             isTunnelUnlocked = true;
-            allowTunnelReset = false;
-            rideComplete = false; 
+            allowTunnelReset = false; 
             document.documentElement.style.scrollSnapType = 'none'; 
             
             bgAudio.currentTime = 0; 
@@ -560,35 +567,31 @@
                         ease: "none",
                         onComplete: () => { 
                             document.documentElement.style.scrollSnapType = 'y mandatory'; 
-                            rideComplete = true; // Flags that the ride is over, waiting for human touch
+                            // 2.5-Second Numbness: Completely ignore Safari's snap-bounce physics
+                            setTimeout(() => { allowTunnelReset = true; }, 2500);
                         }
                     });
                 }
             });
         });
 
-        // Human Interaction Tracker - Safari native programmatic bounces CANNOT trigger this.
-        function humanInteraction() {
-            if (rideComplete) {
-                allowTunnelReset = true; // Only unlocks reset AFTER user physically touches the screen
-            }
+        function manualInterrupt() {
             if (!isUserScrollLocked && autoScrollTween && autoScrollTween.isActive() && isTunnelUnlocked) {
                 autoScrollTween.kill();
                 document.documentElement.style.scrollSnapType = 'y mandatory';
-                rideComplete = true; 
+                setTimeout(() => { allowTunnelReset = true; }, 2500);
             }
         }
-        window.addEventListener('wheel', humanInteraction, {passive: true});
-        window.addEventListener('touchstart', humanInteraction, {passive: true});
+        window.addEventListener('wheel', manualInterrupt, {passive: true});
+        window.addEventListener('touchmove', manualInterrupt, {passive: true});
 
+        // DEEP TRIPWIRE RESET
         ScrollTrigger.create({
             trigger: "#details-section",
-            start: "top 85%", 
+            start: "top 30%", // Requires user to physically swipe 30% back up the screen to trigger reset
             onLeaveBack: () => {
-                if(!allowTunnelReset) return; // Completely ignores Safari's automatic snap bounces
+                if(!allowTunnelReset) return; 
                 isTunnelUnlocked = false; 
-                allowTunnelReset = false;
-                rideComplete = false;
                 gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
                 if(autoScrollTween) autoScrollTween.kill();
                 gsap.set(window, { scrollTo: "#interlude-section" });

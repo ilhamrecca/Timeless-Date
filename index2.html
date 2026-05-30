@@ -606,7 +606,7 @@
                     if(autoScrollTween) autoScrollTween.kill();
                     
                     autoScrollTween = gsap.to(window, {
-                        scrollTo: { y: "#details-section", offsetY: +30, autoKill: false },
+                        scrollTo: { y: "#details-section", offsetY: -100, autoKill: false },
                         duration: strictDuration,
                         ease: "none",
                         onComplete: () => { 

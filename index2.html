@@ -131,17 +131,22 @@
         .countdown div { display: flex; flex-direction: column; align-items: center; }
         .countdown span { font-size: 1.1rem; font-family: 'Cormorant Garamond', serif; color: #bbb; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px;}
 
-        /* --- Couple Section --- */
-        #couple-section .section-title { margin-top: 5vh; }
+        /* --- Strict 100vh Couple Section --- */
+        #couple-section { 
+            height: 100vh; max-height: 100vh; overflow: hidden; padding: 0; 
+        }
+        #couple-section .section-title { margin-top: 2vh; margin-bottom: 2vh; }
+        
         .couple-container {
             display: flex; align-items: center; justify-content: center;
-            max-width: 1400px; width: 100%; position: relative; z-index: 5;
+            max-width: 1400px; width: 100%; height: 80vh; position: relative; z-index: 5;
         }
-        .couple-image-wrapper { flex-shrink: 0; position: relative; z-index: 2; }
+        .couple-image-wrapper { flex-shrink: 0; position: relative; z-index: 2; height: 100%; display: flex; align-items: center; }
+        
         .couple-image {
-            height: 100vh; max-height: 1100px; width: auto; object-fit: contain;
+            height: 75vh; width: auto; object-fit: contain;
             filter: drop-shadow(0px 0px 4px #050508) drop-shadow(0px 0px 8px #050508) drop-shadow(0px 20px 40px rgba(0,0,0,1));
-            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
             transform: scale(1.1); 
         }
         
@@ -153,8 +158,8 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.9);
         }
         
-        .groom-bio { top: 35%; left: 3%; border-left: 3px solid var(--gold); }
-        .bride-bio { top: 15%; right: 3%; border-right: 3px solid var(--gold); }
+        .groom-bio { top: 25%; left: 3%; border-left: 3px solid var(--gold); }
+        .bride-bio { bottom: 15%; right: 3%; border-right: 3px solid var(--gold); }
         
         .couple-text h3 { 
             font-size: 1.4rem; font-family: 'Cinzel', serif; color: var(--gold); 
@@ -229,13 +234,16 @@
             .section-title { font-size: 2.2rem; }
             
             .gold-border-frame { background-size: 40px 40px; top: 2vh; bottom: 2vh; left: 3vw; right: 3vw; }
-            #couple-section .section-title { margin-top: 3vh; }
 
-            .couple-image { height: 60vh; transform: scale(1.02); }
-            .couple-container { flex-direction: column-reverse; height: auto; gap: 1.5rem; }
-            .couple-text { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 100%; max-width: 100%; }
-            .groom-bio { border-left: none; border-top: 2px solid var(--gold); padding-top: 1.5rem; }
-            .bride-bio { border-right: none; border-bottom: 2px solid var(--gold); padding-bottom: 1.5rem; }
+            /* Re-ordered Mobile Layout: Groom on Top, Image, Bride on Bottom */
+            .couple-container { flex-direction: column; justify-content: center; gap: 0; }
+            .couple-text { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 90%; max-width: 340px; padding: 1.5rem; }
+            .couple-image { height: 45vh; max-height: 500px; transform: scale(1.15); margin: 0; }
+            
+            .groom-bio { margin-bottom: -35px; border-left: none; border-bottom: 2px solid var(--gold); z-index: 4; }
+            .bride-bio { margin-top: -35px; border-right: none; border-top: 2px solid var(--gold); z-index: 4; }
+            .couple-text h3 { font-size: 1.2rem; margin-bottom: 0.8rem; }
+            .couple-text p { font-size: 0.9rem; }
             
             .details-grid { flex-direction: column; gap: 1.5rem; align-items: center; }
             .detail-card { width: 100%; }
@@ -425,6 +433,10 @@
         const textureLoader = new THREE.TextureLoader(manager);
         const planes = [];
 
+        // Check if device is mobile to multiply vertical photo scattering
+        const isMobileDevice = window.innerWidth < 768;
+        const verticalSpread = isMobileDevice ? 2.5 : 1; 
+
         images.forEach((imgSrc, index) => {
             textureLoader.load(imgSrc, (texture) => {
                 const imgAspect = texture.image.height > 0 ? (texture.image.width / texture.image.height) : 1.5;
@@ -432,9 +444,30 @@
                 const width = height * imgAspect;
                 const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.95 }));
 
-                const side = index % 2 === 0 ? 1 : -1;
-                plane.position.set(side * (4.5 + Math.random() * 2), (Math.random() - 0.5) * 4, -10 - (index * zSpacing));
-                plane.rotation.y = side * -0.15; 
+                // Dynamic Placement
+                const placementPattern = index % 4;
+                let posX = 0; let posY = 0;
+
+                if (placementPattern === 0) { // Left
+                    posX = -(4 + Math.random() * 3);
+                    posY = (Math.random() - 0.5) * 4 * verticalSpread;
+                    plane.rotation.y = -0.15;
+                } else if (placementPattern === 1) { // Right
+                    posX = (4 + Math.random() * 3);
+                    posY = (Math.random() - 0.5) * 4 * verticalSpread;
+                    plane.rotation.y = 0.15;
+                } else if (placementPattern === 2) { // Top
+                    posX = (Math.random() - 0.5) * 6;
+                    posY = (3.5 + Math.random() * 2.5) * verticalSpread;
+                    plane.rotation.x = 0.15;
+                } else { // Bottom
+                    posX = (Math.random() - 0.5) * 6;
+                    posY = -(3.5 + Math.random() * 2.5) * verticalSpread;
+                    plane.rotation.x = -0.15;
+                }
+
+                const posZ = -10 - (index * zSpacing);
+                plane.position.set(posX, posY, posZ);
                 plane.userData = { index: index, floatY: Math.random() * 0.005, floatX: Math.random() * 0.005 };
 
                 scene.add(plane);
@@ -447,6 +480,7 @@
         let isUserScrollLocked = false;
         let autoScrollTween;
         let isInsideTunnel = false;
+        let allowTunnelReset = false; // Prevents Safari bounce bugs
 
         // --- 5. Interlude Scroll Lock ---
         function interceptScroll(e) {
@@ -476,54 +510,59 @@
         window.addEventListener('wheel', interceptScroll, {passive: false});
         window.addEventListener('keydown', interceptScroll, {passive: false});
 
-        // --- 6. The Chevron Gateway (SAFARI COMPATIBLE AUDIO FIX) ---
+        // --- 6. The Chevron Gateway & SAFARI COMPATIBLE Reset Fix ---
         document.getElementById('scroll-to-photos').addEventListener('click', () => {
             isTunnelUnlocked = true;
+            allowTunnelReset = false; 
             document.documentElement.style.scrollSnapType = 'none'; 
-            
-            // Safari Fix: Audio MUST trigger synchronously inside the click event.
-            bgAudio.currentTime = 0; 
-            bgAudio.volume = 0;
-            bgAudio.play().catch(e => console.log('Audio autoplay blocked by browser.'));
             
             gsap.to(window, { 
                 scrollTo: "#tunnel-trigger", 
                 duration: 1.5, 
                 ease: "power2.inOut",
                 onComplete: () => {
-                    gsap.to(bgAudio, { volume: 1, duration: 1 }); // Fade in
+                    bgAudio.currentTime = 0; bgAudio.volume = 0;
+                    let playPromise = bgAudio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => { gsap.to(bgAudio, { volume: 1, duration: 1 }); }).catch(e => e);
+                    }
 
                     isUserScrollLocked = true;
                     setTimeout(() => { isUserScrollLocked = false; }, 3000);
 
                     if(autoScrollTween) autoScrollTween.kill();
                     
-                    // Custom Manual Interrupt Logic Replaces Buggy GSAP autoKill
                     autoScrollTween = gsap.to(window, {
                         scrollTo: { y: "#details-section", autoKill: false },
                         duration: strictDuration,
                         ease: "none",
-                        onComplete: () => { document.documentElement.style.scrollSnapType = 'y mandatory'; }
+                        onComplete: () => { 
+                            document.documentElement.style.scrollSnapType = 'y mandatory'; 
+                            // SAFARI FIX: Wait 1 second after landing before allowing reset to ignore native bounce
+                            setTimeout(() => { allowTunnelReset = true; }, 1000);
+                        }
                     });
                 }
             });
         });
 
-        // SAFARI FIX: Custom touch/scroll interrupter for auto-scroll
+        // Safari Manual Interrupt Allow
         function manualInterrupt() {
             if (!isUserScrollLocked && autoScrollTween && autoScrollTween.isActive() && isTunnelUnlocked) {
                 autoScrollTween.kill();
                 document.documentElement.style.scrollSnapType = 'y mandatory';
+                setTimeout(() => { allowTunnelReset = true; }, 1000);
             }
         }
         window.addEventListener('wheel', manualInterrupt, {passive: true});
         window.addEventListener('touchmove', manualInterrupt, {passive: true});
 
-        // HARD RESET: Intercept scroll up from Details to reset the tunnel
+        // SAFARI COMPATIBLE HARD RESET
         ScrollTrigger.create({
             trigger: "#details-section",
-            start: "top bottom", 
+            start: "top 80%", // Only triggers if user physically scrolls 20% back up
             onLeaveBack: () => {
+                if(!allowTunnelReset) return; // Ignores GSAP scrollTo bounces
                 isTunnelUnlocked = false; 
                 gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
                 if(autoScrollTween) autoScrollTween.kill();

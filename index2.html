@@ -367,21 +367,12 @@
             "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
             "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
             "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
-            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
-            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
-            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
-            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
-            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
-            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
-            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
-            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
-            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg"
         ];
 
-        // --- Core Strict Tuning ---
         const zSpacing = 6; 
         const tunnelDepth = images.length * zSpacing;
-        const strictDuration = 21; // Enforced strict 21 seconds auto-scroll duration
+        const strictDuration = 21; 
 
         document.getElementById('tunnel-trigger').style.height = `${images.length * 40}vh`;
 
@@ -441,31 +432,9 @@
                 const width = height * imgAspect;
                 const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.95 }));
 
-                // Varied spatial configuration mapping (Left, Right, Top, Bottom)
-                const placementPattern = index % 4;
-                let posX = 0;
-                let posY = 0;
-
-                if (placementPattern === 0) { // Left Core Area
-                    posX = -(4 + Math.random() * 3);
-                    posY = (Math.random() - 0.5) * 3;
-                    plane.rotation.y = -0.15;
-                } else if (placementPattern === 1) { // Right Core Area
-                    posX = (4 + Math.random() * 3);
-                    posY = (Math.random() - 0.5) * 3;
-                    plane.rotation.y = 0.15;
-                } else if (placementPattern === 2) { // Top Arch Area
-                    posX = (Math.random() - 0.5) * 6;
-                    posY = (3.5 + Math.random() * 2.5);
-                    plane.rotation.x = 0.15;
-                } else { // Bottom Foundation Area
-                    posX = (Math.random() - 0.5) * 6;
-                    posY = -(3.5 + Math.random() * 2.5);
-                    plane.rotation.x = -0.15;
-                }
-
-                const posZ = -10 - (index * zSpacing);
-                plane.position.set(posX, posY, posZ);
+                const side = index % 2 === 0 ? 1 : -1;
+                plane.position.set(side * (4.5 + Math.random() * 2), (Math.random() - 0.5) * 4, -10 - (index * zSpacing));
+                plane.rotation.y = side * -0.15; 
                 plane.userData = { index: index, floatY: Math.random() * 0.005, floatX: Math.random() * 0.005 };
 
                 scene.add(plane);
@@ -507,29 +476,32 @@
         window.addEventListener('wheel', interceptScroll, {passive: false});
         window.addEventListener('keydown', interceptScroll, {passive: false});
 
-        // --- 6. The Chevron Gateway & Auto-Scroll Logic ---
+        // --- 6. The Chevron Gateway (SAFARI COMPATIBLE AUDIO FIX) ---
         document.getElementById('scroll-to-photos').addEventListener('click', () => {
             isTunnelUnlocked = true;
             document.documentElement.style.scrollSnapType = 'none'; 
+            
+            // Safari Fix: Audio MUST trigger synchronously inside the click event.
+            bgAudio.currentTime = 0; 
+            bgAudio.volume = 0;
+            bgAudio.play().catch(e => console.log('Audio autoplay blocked by browser.'));
             
             gsap.to(window, { 
                 scrollTo: "#tunnel-trigger", 
                 duration: 1.5, 
                 ease: "power2.inOut",
                 onComplete: () => {
-                    bgAudio.currentTime = 0; bgAudio.volume = 0;
-                    let playPromise = bgAudio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => { gsap.to(bgAudio, { volume: 1, duration: 1 }); }).catch(e => e);
-                    }
+                    gsap.to(bgAudio, { volume: 1, duration: 1 }); // Fade in
 
                     isUserScrollLocked = true;
                     setTimeout(() => { isUserScrollLocked = false; }, 3000);
 
                     if(autoScrollTween) autoScrollTween.kill();
+                    
+                    // Custom Manual Interrupt Logic Replaces Buggy GSAP autoKill
                     autoScrollTween = gsap.to(window, {
-                        scrollTo: { y: "#details-section", autoKill: true },
-                        duration: strictDuration, // Strict 21 seconds runtime locked in place
+                        scrollTo: { y: "#details-section", autoKill: false },
+                        duration: strictDuration,
                         ease: "none",
                         onComplete: () => { document.documentElement.style.scrollSnapType = 'y mandatory'; }
                     });
@@ -537,7 +509,17 @@
             });
         });
 
-        // HARD RESET
+        // SAFARI FIX: Custom touch/scroll interrupter for auto-scroll
+        function manualInterrupt() {
+            if (!isUserScrollLocked && autoScrollTween && autoScrollTween.isActive() && isTunnelUnlocked) {
+                autoScrollTween.kill();
+                document.documentElement.style.scrollSnapType = 'y mandatory';
+            }
+        }
+        window.addEventListener('wheel', manualInterrupt, {passive: true});
+        window.addEventListener('touchmove', manualInterrupt, {passive: true});
+
+        // HARD RESET: Intercept scroll up from Details to reset the tunnel
         ScrollTrigger.create({
             trigger: "#details-section",
             start: "top bottom", 

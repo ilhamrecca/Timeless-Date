@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invitation | Ilham & Nina</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Great+Vibes&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+    
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/BokehShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/BokehPass.js"></script>
+
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --bg-color: #050508;
+            --text-light: #fdfdfd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-snap-type: y mandatory; }
+
+        body {
+            background-color: var(--bg-color); color: var(--text-light);
+            font-family: 'Cormorant Garamond', serif; overflow-x: hidden; overscroll-behavior: none;
+        }
+
+        /* --- Loading Screen --- */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #020203; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+            transition: opacity 1s ease-in-out;
+        }
+        .progress-bar { width: 250px; height: 1px; background: #222; margin-top: 30px; }
+        .progress-fill { width: 0%; height: 100%; background: var(--gold); transition: width 0.3s; box-shadow: 0 0 15px var(--gold); }
+        #loader-text { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; }
+
+        /* --- 3D Canvas --- */
+        #webgl-canvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; pointer-events: auto; 
+        }
+
+        /* --- Layout & Snapping --- */
+        section {
+            min-height: 100vh; width: 100vw; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; position: relative; padding: 2rem;
+            text-align: center; pointer-events: none; scroll-snap-align: start; 
+        }
+        
+        .glass-panel, .btn-map, .hero-title-wrapper, .couple-container, #intro-content-wrapper, .chevron { pointer-events: auto; }
+
+        .tunnel-track { width: 100%; position: relative; pointer-events: none; }
+
+        /* --- Elegant Gold Border Frame --- */
+        .gold-border-frame {
+            position: absolute;
+            top: 4vh; bottom: 4vh; left: 4vw; right: 4vw;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                linear-gradient(to right, var(--gold) 2px, transparent 2px) 0 0,
+                linear-gradient(to bottom, var(--gold) 2px, transparent 2px) 0 0,
+                linear-gradient(to left, var(--gold) 2px, transparent 2px) 100% 0,
+                linear-gradient(to bottom, var(--gold) 2px, transparent 2px) 100% 0,
+                linear-gradient(to right, var(--gold) 2px, transparent 2px) 0 100%,
+                linear-gradient(to top, var(--gold) 2px, transparent 2px) 0 100%,
+                linear-gradient(to left, var(--gold) 2px, transparent 2px) 100% 100%,
+                linear-gradient(to top, var(--gold) 2px, transparent 2px) 100% 100%;
+            background-repeat: no-repeat;
+            background-size: 60px 60px; 
+        }
+        .gold-border-frame::after {
+            content: '';
+            position: absolute;
+            top: 15px; bottom: 15px; left: 15px; right: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        /* --- Intro Section --- */
+        #intro-content-wrapper {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; width: 100%;
+        }
+        .yth-container {
+            font-family: 'Cormorant Garamond', serif; color: #ddd;
+            background: rgba(5, 5, 8, 0.4); border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 2rem 3rem; border-radius: 8px; backdrop-filter: blur(5px); margin-top: 0.5rem;
+        }
+        .yth-container p { font-size: 1.2rem; font-style: italic; margin-bottom: 10px; }
+        .guest-name {
+            font-size: 2rem; color: var(--gold); font-family: 'Cinzel', serif;
+            display: inline-block; border-bottom: 1px solid var(--gold); padding-bottom: 5px; min-width: 250px;
+        }
+
+        /* --- Calligraphy Title --- */
+        .hero-title-wrapper {
+            display: flex; flex-direction: column; align-items: center;
+            margin-bottom: 10px; overflow: visible; width: 100%;
+        }
+        .the-wedding-of {
+            font-family: 'Cinzel', serif; font-size: 1.5rem; letter-spacing: 5px; 
+            color: var(--gold); margin-bottom: -15px; z-index: 2; text-transform: uppercase;
+        }
+        .hero-title {
+            font-family: 'Great Vibes', cursive; font-size: 6.5rem; font-weight: normal; color: var(--gold); 
+            filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.8)); padding: 20px 40px; white-space: nowrap; 
+            -webkit-mask-image: linear-gradient(to right, black 45%, transparent 55%);
+            -webkit-mask-size: 250% 100%; -webkit-mask-position: 100% 0;
+        }
+
+        /* --- UI Elements --- */
+        h2, h3 { font-family: 'Cinzel', serif; font-weight: 400; color: var(--gold); }
+        .section-title { font-size: 3rem; margin-bottom: 3rem; letter-spacing: 4px; z-index: 5; }
+        .glass-panel {
+            max-width: 850px; background: rgba(10, 10, 15, 0.4); padding: 4rem 3rem;
+            border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px;
+            backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; z-index: 5;
+        }
+        .countdown { display: flex; gap: 3rem; margin: 3rem 0; font-family: 'Cinzel', serif; font-size: 2.5rem; justify-content: center; flex-wrap: wrap; }
+        .countdown div { display: flex; flex-direction: column; align-items: center; }
+        .countdown span { font-size: 1.1rem; font-family: 'Cormorant Garamond', serif; color: #bbb; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px;}
+
+        /* --- Couple Section --- */
+        #couple-section .section-title { margin-top: 5vh; }
+        .couple-container {
+            display: flex; align-items: center; justify-content: center;
+            max-width: 1400px; width: 100%; position: relative; z-index: 5;
+        }
+        .couple-image-wrapper { flex-shrink: 0; position: relative; z-index: 2; }
+        .couple-image {
+            height: 100vh; max-height: 1100px; width: auto; object-fit: contain;
+            filter: drop-shadow(0px 0px 4px #050508) drop-shadow(0px 0px 8px #050508) drop-shadow(0px 20px 40px rgba(0,0,0,1));
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            transform: scale(1.1); 
+        }
+        
+        .couple-text {
+            position: absolute; width: 440px; text-align: center; z-index: 3;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
+            padding: 2.5rem 1.5rem; border-radius: 4px; 
+            border: 1px solid rgba(212, 175, 55, 0.4); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        }
+        
+        .groom-bio { top: 35%; left: 3%; border-left: 3px solid var(--gold); }
+        .bride-bio { top: 15%; right: 3%; border-right: 3px solid var(--gold); }
+        
+        .couple-text h3 { 
+            font-size: 1.4rem; font-family: 'Cinzel', serif; color: var(--gold); 
+            line-height: 1.6; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1.5rem;
+        }
+        .couple-text p { font-size: 1rem; line-height: 1.6; color: #ccc; font-family: 'Cormorant Garamond', serif;}
+
+        /* --- Interlude Section & Chevron --- */
+        #interlude-section { background: radial-gradient(circle, rgba(10,10,15,0.7) 0%, rgba(5,5,8,0) 70%); }
+        .chevron {
+            margin-top: 50px; width: 40px; height: 40px;
+            border-right: 3px solid var(--gold); border-bottom: 3px solid var(--gold);
+            transform: rotate(45deg); cursor: pointer; animation: bounce 2s infinite; z-index: 5;
+        }
+
+        /* --- Story Text Overlay --- */
+        .story-wrapper {
+            position: sticky; top: 0; height: 100vh; width: 100%;
+            display: flex; justify-content: center; align-items: center; pointer-events: none; z-index: 10;
+        }
+        .story-line {
+            position: absolute; opacity: 0; font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-style: italic;
+            color: var(--gold); max-width: 800px; padding: 20px 50px; text-align: center;
+            background: rgba(5, 5, 8, 0.7); backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(212, 175, 55, 0.5); border-bottom: 1px solid rgba(212, 175, 55, 0.5);
+            border-radius: 50px; width: 90%;
+        }
+
+        /* --- Details Section --- */
+        .details-grid { display: flex; gap: 3rem; margin-top: 3rem; margin-bottom: 2rem; width: 100%; justify-content: center; flex-wrap: wrap; z-index: 5; }
+        .detail-card {
+            background: rgba(10, 10, 15, 0.6); padding: 2.5rem; border: 1px solid rgba(255,255,255,0.05);
+            border-top: 2px solid var(--gold); backdrop-filter: blur(15px); min-width: 280px;
+        }
+        .btn-map {
+            display: inline-block; margin-top: 2.5rem; padding: 12px 30px; background: transparent;
+            border: 1px solid var(--gold); color: var(--gold); text-decoration: none;
+            font-family: 'Cinzel', serif; letter-spacing: 2px; transition: all 0.4s ease; text-transform: uppercase;
+        }
+        .btn-map:hover { background: var(--gold); color: var(--bg-color); box-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+
+        /* --- Thanks Section --- */
+        .thanks-text { font-size: 1.4rem; line-height: 1.8; color: #eee; margin-bottom: 2.5rem; }
+        .signature-text { font-family: 'Great Vibes', cursive; font-size: 4rem; color: var(--gold); margin-top: 1rem; }
+
+        /* --- Lightbox --- */
+        #lightbox {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 10000;
+            display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(10px);
+        }
+        #lightbox.active { opacity: 1; pointer-events: auto; }
+        #lightbox-img { max-width: 90%; max-height: 80%; border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); }
+        .lightbox-btn {
+            position: absolute; background: transparent; border: none; color: var(--gold);
+            font-size: 3rem; cursor: pointer; padding: 20px; font-family: 'Cinzel', serif; transition: transform 0.3s;
+        }
+        .lightbox-btn:hover { transform: scale(1.2); }
+        #lb-prev { left: 2%; } #lb-next { right: 2%; } #lb-close { top: 2%; right: 2%; font-size: 2.5rem; }
+
+        @keyframes bounce { 0%, 100% {transform: translateY(0) rotate(45deg);} 50% {transform: translateY(15px) rotate(45deg);} }
+
+        /* --- Mobile Responsive Optimizations --- */
+        @media (max-width: 1024px) {
+            .groom-bio { left: 1%; width: 320px; }
+            .bride-bio { right: 1%; width: 320px; }
+        }
+        @media (max-width: 768px) {
+            .the-wedding-of { font-size: 1.1rem; margin-bottom: -5px; }
+            .hero-title { font-size: 3.8rem; padding: 10px 20px; }
+            .yth-container { padding: 1.5rem; }
+            .guest-name { font-size: 1.5rem; min-width: 200px; }
+            .section-title { font-size: 2.2rem; }
+            
+            .gold-border-frame { background-size: 40px 40px; top: 2vh; bottom: 2vh; left: 3vw; right: 3vw; }
+            #couple-section .section-title { margin-top: 3vh; }
+
+            .couple-image { height: 60vh; transform: scale(1.02); }
+            .couple-container { flex-direction: column-reverse; height: auto; gap: 1.5rem; }
+            .couple-text { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 100%; max-width: 100%; }
+            .groom-bio { border-left: none; border-top: 2px solid var(--gold); padding-top: 1.5rem; }
+            .bride-bio { border-right: none; border-bottom: 2px solid var(--gold); padding-bottom: 1.5rem; }
+            
+            .details-grid { flex-direction: column; gap: 1.5rem; align-items: center; }
+            .detail-card { width: 100%; }
+            .countdown { gap: 1.5rem; font-size: 1.8rem; }
+            .glass-panel { padding: 2rem 1.5rem; }
+            .story-line { font-size: 1.3rem; padding: 15px 25px; }
+            #lb-prev { left: -10px; } #lb-next { right: -10px; }
+            .thanks-text { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lightbox">
+        <button class="lightbox-btn" id="lb-close">✕</button>
+        <button class="lightbox-btn" id="lb-prev">‹</button>
+        <img id="lightbox-img" src="" alt="Prewedding Photo">
+        <button class="lightbox-btn" id="lb-next">›</button>
+    </div>
+
+    <div id="loader">
+        <div id="loader-text">Mempersiapkan Memori...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    </div>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <main id="scroll-area">
+        
+        <section id="intro-section">
+            <div class="gold-border-frame" id="intro-frame"></div>
+            
+            <div id="intro-content-wrapper">
+                <div class="hero-title-wrapper">
+                    <p class="the-wedding-of">The Wedding of</p>
+                    <h1 class="hero-title" id="brush-text">Ilham & Nina</h1>
+                </div>
+                <div class="yth-container">
+                    <p>Kepada Yth.<br>Bapak/Ibu/Saudara/i:</p>
+                    <span class="guest-name" id="guest-name">Nama Tamu</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="glass-panel">
+                <p>Tanpa mengurangi rasa hormat, kami memberikan kabar bahagia ini dan memohon restu dari rekan sekalian untuk senantiasa mendoakan kelancaran acara pernikahan kami.</p>
+                <div class="countdown" id="countdown-timer">
+                    <div><span id="days">00</span><span>Hari</span></div>
+                    <div><span id="hours">00</span><span>Jam</span></div>
+                    <div><span id="minutes">00</span><span>Menit</span></div>
+                    <div><span id="seconds">00</span><span>Detik</span></div>
+                </div>
+                <p class="quote-text">"Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu istri-istri dari jenismu sendiri, supaya kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya diantaramu rasa kasih dan sayang. Sesungguhnya pada yang demikian itu benar-benar terdapat tanda-tanda bagi kaum yang berfikir"<br><br><span style="color:var(--gold); font-family: 'Cinzel', serif;">- Qs. Ar-Rum : 21 -</span></p>
+            </div>
+        </section>
+
+        <section id="couple-section">
+            <div class="gold-border-frame" style="opacity: 1;"></div>
+            
+            <h2 class="section-title">Sang Mempelai</h2>
+            <div class="couple-container">
+                <div class="couple-text groom-bio" id="groom-box">
+                    <h3>Muhammad Ilham Maulana S.Kom.</h3>
+                    <p>Putra dari Bapak Zulkarnain dan Ibu Nurhasanah Ibrahim S.Pd.</p>
+                </div>
+                
+                <div class="couple-image-wrapper">
+                    <img src="IMG_6826.png" alt="Ilham dan Nina" class="couple-image" id="couple-img">
+                </div>
+
+                <div class="couple-text bride-bio" id="bride-box">
+                    <h3>Nanda Karina Satriani S.M.</h3>
+                    <p>Putri dari Bapak Agus Satriawan (Alm) dan Ibu Eliya Mariani</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="interlude-section">
+            <h2 class="section-title">Our Story</h2>
+            <p style="font-size: 1.2rem; color: #ccc; max-width: 600px; line-height: 1.6;">Sebuah perjalanan panjang menyusuri waktu, merekam setiap tawa, dan menyimpan setiap kenangan. Mari berjalan sejenak menyusuri kisah kami...</p>
+            <div class="chevron" id="scroll-to-photos"></div>
+        </section>
+
+        <div class="tunnel-track" id="tunnel-trigger">
+            <div class="story-wrapper">
+                <p class="story-line">Kisah kami bermula dari kesederhanaan...</p>
+                <p class="story-line">Langkah demi langkah, menyatukan dua dunia...</p>
+                <p class="story-line">Melewati tawa, air mata, dan harapan...</p>
+                <p class="story-line">Hingga kami memutuskan melangkah bersama...</p>
+                <p class="story-line">Menuju takdir yang telah dituliskan-Nya.</p>
+            </div>
+        </div>
+
+        <section id="details-section">
+            <h2 class="section-title">Wedding Details</h2>
+            <div class="details-grid">
+                <div class="detail-card">
+                    <h3>Akad</h3>
+                    <p style="font-size: 1.2rem; color: #ccc;">Minggu, 5 Juli 2026</p>
+                    <p style="font-size: 1.2rem; color: #ccc;">08:00 WITA</p>
+                </div>
+                <div class="detail-card">
+                    <h3>Resepsi</h3>
+                    <p style="font-size: 1.2rem; color: #ccc;">Minggu, 5 Juli 2026</p>
+                    <p style="font-size: 1.2rem; color: #ccc;">11:00 WITA</p>
+                </div>
+            </div>
+            <div class="glass-panel" style="margin-top: 2rem; padding: 2rem; max-width: 600px;">
+                <p><strong style="color: var(--gold); font-family: 'Cinzel', serif; font-size: 1.5rem;">Grand Imperial Ballroom</strong></p><br>
+                <p style="font-size: 1.2rem; color: #ccc;">Jl. Panji Tilar Negara, Kekalik Jaya,<br>Kec. Sekarbela, Kota Mataram,<br>Nusa Tenggara Bar. 83115</p>
+                <a href="https://maps.app.goo.gl/nq4KYEjghAB7uciw9" target="_blank" class="btn-map">Open Map</a>
+            </div>
+        </section>
+
+        <section id="thanks-section">
+            <div class="glass-panel">
+                <p class="thanks-text">Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir dan memberikan do'a restu kepada kedua mempelai.</p>
+                <p style="font-family: 'Cinzel', serif; letter-spacing: 3px; font-size: 1.1rem; color: #aaa;">Hormat Kami yang Mengundang</p>
+                <p class="signature-text">Ilham & Nina</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+        const images = [
+            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
+            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
+            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
+            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
+            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
+            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
+            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+        ];
+
+        // --- Core Strict Tuning ---
+        const zSpacing = 6; 
+        const tunnelDepth = images.length * zSpacing;
+        const strictDuration = 21; // Enforced strict 21 seconds auto-scroll duration
+
+        document.getElementById('tunnel-trigger').style.height = `${images.length * 40}vh`;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const guestName = urlParams.get('to');
+        if(guestName) document.getElementById('guest-name').innerText = guestName;
+
+        // --- 1. Audio Setup ---
+        const bgAudio = new Audio('Sore.mp3');
+        bgAudio.loop = false; 
+
+        // --- 2. Loading Management ---
+        const manager = new THREE.LoadingManager();
+        manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+            document.getElementById('progress').style.width = (itemsLoaded / itemsTotal * 100) + '%';
+        };
+        manager.onLoad = function () {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                    gsap.to('#brush-text', { webkitMaskPosition: '0% 0', duration: 3, ease: 'power2.inOut' });
+                    ScrollTrigger.refresh();
+                }, 1000);
+            }, 500);
+        };
+
+        // --- 3. 3D Setup ---
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050508, 0.035);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        const composer = new THREE.EffectComposer(renderer);
+        composer.addPass(new THREE.RenderPass(scene, camera));
+        const bokehPass = new THREE.BokehPass(scene, camera, { focus: 8.0, aperture: 0.002, maxblur: 0.015, width: window.innerWidth, height: window.innerHeight });
+        composer.addPass(bokehPass);
+
+        const ambientGroup = new THREE.Group();
+        const pGeo = new THREE.BufferGeometry();
+        const pPos = new Float32Array(1500 * 3);
+        for(let i=0; i<4500; i++) pPos[i] = (Math.random() - 0.5) * 80;
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+        ambientGroup.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 0.04, color: 0xD4AF37, transparent: true, opacity: 0.5 })));
+        scene.add(ambientGroup);
+
+        const textureLoader = new THREE.TextureLoader(manager);
+        const planes = [];
+
+        images.forEach((imgSrc, index) => {
+            textureLoader.load(imgSrc, (texture) => {
+                const imgAspect = texture.image.height > 0 ? (texture.image.width / texture.image.height) : 1.5;
+                const height = 4.5; 
+                const width = height * imgAspect;
+                const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.95 }));
+
+                // Varied spatial configuration mapping (Left, Right, Top, Bottom)
+                const placementPattern = index % 4;
+                let posX = 0;
+                let posY = 0;
+
+                if (placementPattern === 0) { // Left Core Area
+                    posX = -(4 + Math.random() * 3);
+                    posY = (Math.random() - 0.5) * 3;
+                    plane.rotation.y = -0.15;
+                } else if (placementPattern === 1) { // Right Core Area
+                    posX = (4 + Math.random() * 3);
+                    posY = (Math.random() - 0.5) * 3;
+                    plane.rotation.y = 0.15;
+                } else if (placementPattern === 2) { // Top Arch Area
+                    posX = (Math.random() - 0.5) * 6;
+                    posY = (3.5 + Math.random() * 2.5);
+                    plane.rotation.x = 0.15;
+                } else { // Bottom Foundation Area
+                    posX = (Math.random() - 0.5) * 6;
+                    posY = -(3.5 + Math.random() * 2.5);
+                    plane.rotation.x = -0.15;
+                }
+
+                const posZ = -10 - (index * zSpacing);
+                plane.position.set(posX, posY, posZ);
+                plane.userData = { index: index, floatY: Math.random() * 0.005, floatX: Math.random() * 0.005 };
+
+                scene.add(plane);
+                planes.push(plane);
+            });
+        });
+
+        // --- 4. Logic Guards & Lock Variables ---
+        let isTunnelUnlocked = false;
+        let isUserScrollLocked = false;
+        let autoScrollTween;
+        let isInsideTunnel = false;
+
+        // --- 5. Interlude Scroll Lock ---
+        function interceptScroll(e) {
+            if (isUserScrollLocked) { e.preventDefault(); return; }
+            if (isTunnelUnlocked) return;
+            const interlude = document.getElementById('interlude-section');
+            if (!interlude) return;
+            const rect = interlude.getBoundingClientRect();
+            if (rect.top <= 10 && rect.top > -10) {
+                if (e.type === 'wheel' && e.deltaY > 0) { e.preventDefault(); }
+                if (e.type === 'keydown' && ["ArrowDown", "PageDown", " ", "End"].includes(e.code)) { e.preventDefault(); }
+            }
+        }
+        
+        let touchStartY = 0;
+        window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: true});
+        window.addEventListener('touchmove', e => {
+            if (isUserScrollLocked) { e.preventDefault(); return; }
+            if (isTunnelUnlocked) return;
+            let deltaY = touchStartY - e.touches[0].clientY; 
+            const interlude = document.getElementById('interlude-section');
+            if (!interlude) return;
+            const rect = interlude.getBoundingClientRect();
+            if (rect.top <= 10 && rect.top > -10 && deltaY > 0) { e.preventDefault(); }
+        }, {passive: false});
+
+        window.addEventListener('wheel', interceptScroll, {passive: false});
+        window.addEventListener('keydown', interceptScroll, {passive: false});
+
+        // --- 6. The Chevron Gateway & Auto-Scroll Logic ---
+        document.getElementById('scroll-to-photos').addEventListener('click', () => {
+            isTunnelUnlocked = true;
+            document.documentElement.style.scrollSnapType = 'none'; 
+            
+            gsap.to(window, { 
+                scrollTo: "#tunnel-trigger", 
+                duration: 1.5, 
+                ease: "power2.inOut",
+                onComplete: () => {
+                    bgAudio.currentTime = 0; bgAudio.volume = 0;
+                    let playPromise = bgAudio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => { gsap.to(bgAudio, { volume: 1, duration: 1 }); }).catch(e => e);
+                    }
+
+                    isUserScrollLocked = true;
+                    setTimeout(() => { isUserScrollLocked = false; }, 3000);
+
+                    if(autoScrollTween) autoScrollTween.kill();
+                    autoScrollTween = gsap.to(window, {
+                        scrollTo: { y: "#details-section", autoKill: true },
+                        duration: strictDuration, // Strict 21 seconds runtime locked in place
+                        ease: "none",
+                        onComplete: () => { document.documentElement.style.scrollSnapType = 'y mandatory'; }
+                    });
+                }
+            });
+        });
+
+        // HARD RESET
+        ScrollTrigger.create({
+            trigger: "#details-section",
+            start: "top bottom", 
+            onLeaveBack: () => {
+                isTunnelUnlocked = false; 
+                gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
+                if(autoScrollTween) autoScrollTween.kill();
+                gsap.set(window, { scrollTo: "#interlude-section" });
+                document.documentElement.style.scrollSnapType = 'y mandatory'; 
+            }
+        });
+
+        // --- 7. Connecting Animations ---
+        ScrollTrigger.create({
+            trigger: "#tunnel-trigger",
+            start: "top bottom",
+            end: "bottom top",
+            onEnter: () => isInsideTunnel = true,
+            onEnterBack: () => isInsideTunnel = true,
+            onLeave: () => { isInsideTunnel = false; document.body.style.cursor = 'default'; },
+            onLeaveBack: () => { isInsideTunnel = false; document.body.style.cursor = 'default'; }
+        });
+
+        camera.position.z = 10;
+
+        gsap.to(['#intro-content-wrapper', '#intro-frame'], {
+            scrollTrigger: { trigger: '#intro-section', start: 'top top', end: 'bottom center', scrub: true },
+            opacity: 0, y: -50, filter: 'blur(5px)', ease: "none"
+        });
+
+        gsap.to(camera.position, {
+            z: -tunnelDepth - 5, ease: "none",
+            scrollTrigger: { trigger: "#tunnel-trigger", start: "top top", end: "bottom top", scrub: true }
+        });
+
+        const storyLines = gsap.utils.toArray('.story-line');
+        storyLines.forEach((line, i) => {
+            gsap.timeline({
+                scrollTrigger: { trigger: "#tunnel-trigger", start: `${(i / storyLines.length) * 100}% top`, end: `${((i + 1) / storyLines.length) * 100}% top`, scrub: true }
+            }).fromTo(line, { opacity: 0, scale: 0.9, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.3 })
+              .to(line, { opacity: 1, duration: 0.4 }) 
+              .to(line, { opacity: 0, scale: 1.05, y: -30, duration: 0.3 });
+        });
+
+        gsap.from("#couple-img", { scrollTrigger: { trigger: "#couple-section", start: "top 70%" }, opacity: 0, scale: 0.9, y: 50, duration: 1.5, ease: "power3.out" });
+        const isDesktop = window.innerWidth > 992;
+        gsap.from("#groom-box", { scrollTrigger: { trigger: "#couple-section", start: "top 60%" }, opacity: 0, x: isDesktop ? -40 : 0, y: isDesktop ? 0 : 30, duration: 1.2, delay: 0.3, ease: "power2.out" });
+        gsap.from("#bride-box", { scrollTrigger: { trigger: "#couple-section", start: "top 60%" }, opacity: 0, x: isDesktop ? 40 : 0, y: isDesktop ? 0 : 30, duration: 1.2, delay: 0.6, ease: "power2.out" });
+
+        // --- 8. Render & Interaction ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let hoveredPlane = null;
+        let isLightboxOpen = false;
+        let currentImgIndex = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            if(isLightboxOpen) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        window.addEventListener('click', () => {
+            if(isLightboxOpen || hoveredPlane === null || !isInsideTunnel) return;
+            openLightbox(hoveredPlane.userData.index);
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            if(isLightboxOpen || e.touches.length === 0 || !isInsideTunnel) return;
+            mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(planes);
+            if(intersects.length > 0) openLightbox(intersects[0].object.userData.index);
+        }, {passive: true});
+
+        function openLightbox(index) {
+            isLightboxOpen = true; currentImgIndex = index;
+            document.getElementById('lightbox-img').src = images[currentImgIndex];
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        document.getElementById('lb-close').addEventListener('click', (e) => { e.stopPropagation(); isLightboxOpen = false; document.getElementById('lightbox').classList.remove('active'); });
+        document.getElementById('lb-prev').addEventListener('click', (e) => { e.stopPropagation(); currentImgIndex = (currentImgIndex - 1 + images.length) % images.length; document.getElementById('lightbox-img').src = images[currentImgIndex]; });
+        document.getElementById('lb-next').addEventListener('click', (e) => { e.stopPropagation(); currentImgIndex = (currentImgIndex + 1) % images.length; document.getElementById('lightbox-img').src = images[currentImgIndex]; });
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+            ambientGroup.rotation.z = time * 0.02;
+
+            planes.forEach((plane, i) => {
+                plane.position.y += Math.sin(time + i) * plane.userData.floatY;
+                plane.position.x += Math.cos(time + i) * plane.userData.floatX;
+            });
+
+            if(!isLightboxOpen && isInsideTunnel) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(planes);
+                if (intersects.length > 0) {
+                    document.body.style.cursor = 'pointer';
+                    if (hoveredPlane !== intersects[0].object) {
+                        if(hoveredPlane) gsap.to(hoveredPlane.scale, {x: 1, y: 1, duration: 0.3});
+                        hoveredPlane = intersects[0].object;
+                        gsap.to(hoveredPlane.scale, {x: 1.08, y: 1.08, duration: 0.3}); 
+                    }
+                } else {
+                    document.body.style.cursor = 'default';
+                    if (hoveredPlane) { gsap.to(hoveredPlane.scale, {x: 1, y: 1, duration: 0.3}); hoveredPlane = null; }
+                }
+            } else if (!isInsideTunnel && hoveredPlane) {
+                gsap.to(hoveredPlane.scale, {x: 1, y: 1, duration: 0.3}); hoveredPlane = null;
+            }
+            
+            composer.render();
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight);
+            bokehPass.uniforms['aspect'].value = window.innerWidth / window.innerHeight;
+        });
+
+        // Countdown Logic
+        const targetDate = new Date("2026-07-05T08:00:00+08:00").getTime();
+        setInterval(() => {
+            const distance = targetDate - new Date().getTime();
+            if (distance < 0) return;
+            document.getElementById("days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+            document.getElementById("hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            document.getElementById("minutes").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            document.getElementById("seconds").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+        }, 1000);
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invitation | Ilham & Nina</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Great+Vibes&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+    
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/BokehShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/BokehPass.js"></script>
+
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --bg-color: #050508;
+            --text-light: #fdfdfd;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-snap-type: y mandatory; }
+
+        body {
+            background-color: var(--bg-color); color: var(--text-light);
+            font-family: 'Cormorant Garamond', serif; overflow-x: hidden; overscroll-behavior: none;
+        }
+
+        /* --- Loading Screen --- */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #020203; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+            transition: opacity 1s ease-in-out;
+        }
+        .progress-bar { width: 250px; height: 1px; background: #222; margin-top: 30px; }
+        .progress-fill { width: 0%; height: 100%; background: var(--gold); transition: width 0.3s; box-shadow: 0 0 15px var(--gold); }
+        #loader-text { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; }
+
+        /* --- 3D Canvas --- */
+        #webgl-canvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; pointer-events: auto; 
+        }
+
+        /* --- Layout & Snapping --- */
+        section {
+            min-height: 100vh; width: 100vw; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; position: relative; padding: 2rem;
+            text-align: center; pointer-events: none; scroll-snap-align: start; 
+        }
+        
+        .glass-panel, .btn-map, .hero-title-wrapper, .couple-container, #intro-content-wrapper, .chevron { pointer-events: auto; }
+
+        .tunnel-track { width: 100%; position: relative; pointer-events: none; }
+
+        /* --- Elegant Gold Border Frame --- */
+        .gold-border-frame {
+            position: absolute;
+            top: 4vh; bottom: 4vh; left: 4vw; right: 4vw;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                linear-gradient(to right, var(--gold) 2px, transparent 2px) 0 0,
+                linear-gradient(to bottom, var(--gold) 2px, transparent 2px) 0 0,
+                linear-gradient(to left, var(--gold) 2px, transparent 2px) 100% 0,
+                linear-gradient(to bottom, var(--gold) 2px, transparent 2px) 100% 0,
+                linear-gradient(to right, var(--gold) 2px, transparent 2px) 0 100%,
+                linear-gradient(to top, var(--gold) 2px, transparent 2px) 0 100%,
+                linear-gradient(to left, var(--gold) 2px, transparent 2px) 100% 100%,
+                linear-gradient(to top, var(--gold) 2px, transparent 2px) 100% 100%;
+            background-repeat: no-repeat;
+            background-size: 60px 60px; 
+        }
+        .gold-border-frame::after {
+            content: '';
+            position: absolute;
+            top: 15px; bottom: 15px; left: 15px; right: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        /* --- Intro Section --- */
+        #intro-content-wrapper {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; width: 100%;
+        }
+        .yth-container {
+            font-family: 'Cormorant Garamond', serif; color: #ddd;
+            background: rgba(5, 5, 8, 0.4); border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 2rem 3rem; border-radius: 8px; backdrop-filter: blur(5px); margin-top: 0.5rem;
+        }
+        .yth-container p { font-size: 1.2rem; font-style: italic; margin-bottom: 10px; }
+        .guest-name {
+            font-size: 2rem; color: var(--gold); font-family: 'Cinzel', serif;
+            display: inline-block; border-bottom: 1px solid var(--gold); padding-bottom: 5px; min-width: 250px;
+        }
+
+        /* --- Calligraphy Title --- */
+        .hero-title-wrapper {
+            display: flex; flex-direction: column; align-items: center;
+            margin-bottom: 10px; overflow: visible; width: 100%;
+        }
+        .the-wedding-of {
+            font-family: 'Cinzel', serif; font-size: 1.5rem; letter-spacing: 5px; 
+            color: var(--gold); margin-bottom: -15px; z-index: 2; text-transform: uppercase;
+        }
+        .hero-title {
+            font-family: 'Great Vibes', cursive; font-size: 6.5rem; font-weight: normal; color: var(--gold); 
+            filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.8)); padding: 20px 40px; white-space: nowrap; 
+            -webkit-mask-image: linear-gradient(to right, black 45%, transparent 55%);
+            -webkit-mask-size: 250% 100%; -webkit-mask-position: 100% 0;
+        }
+
+        /* --- UI Elements --- */
+        h2, h3 { font-family: 'Cinzel', serif; font-weight: 400; color: var(--gold); }
+        .section-title { font-size: 3rem; margin-bottom: 3rem; letter-spacing: 4px; z-index: 5; }
+        .glass-panel {
+            max-width: 850px; background: rgba(10, 10, 15, 0.4); padding: 4rem 3rem;
+            border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px;
+            backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; z-index: 5;
+        }
+        .countdown { display: flex; gap: 3rem; margin: 3rem 0; font-family: 'Cinzel', serif; font-size: 2.5rem; justify-content: center; flex-wrap: wrap; }
+        .countdown div { display: flex; flex-direction: column; align-items: center; }
+        .countdown span { font-size: 1.1rem; font-family: 'Cormorant Garamond', serif; color: #bbb; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px;}
+
+        /* --- Couple Section --- */
+        #couple-section .section-title { margin-top: 5vh; }
+        .couple-container {
+            display: flex; align-items: center; justify-content: center;
+            max-width: 1400px; width: 100%; position: relative; z-index: 5;
+        }
+        .couple-image-wrapper { flex-shrink: 0; position: relative; z-index: 2; }
+        .couple-image {
+            height: 100vh; max-height: 1100px; width: auto; object-fit: contain;
+            filter: drop-shadow(0px 0px 4px #050508) drop-shadow(0px 0px 8px #050508) drop-shadow(0px 20px 40px rgba(0,0,0,1));
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            transform: scale(1.1); 
+        }
+        
+        .couple-text {
+            position: absolute; width: 440px; text-align: center; z-index: 3;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
+            padding: 2.5rem 1.5rem; border-radius: 4px; 
+            border: 1px solid rgba(212, 175, 55, 0.4); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        }
+        
+        .groom-bio { top: 35%; left: 3%; border-left: 3px solid var(--gold); }
+        .bride-bio { top: 15%; right: 3%; border-right: 3px solid var(--gold); }
+        
+        .couple-text h3 { 
+            font-size: 1.4rem; font-family: 'Cinzel', serif; color: var(--gold); 
+            line-height: 1.6; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1.5rem;
+        }
+        .couple-text p { font-size: 1rem; line-height: 1.6; color: #ccc; font-family: 'Cormorant Garamond', serif;}
+
+        /* --- Interlude Section & Chevron --- */
+        #interlude-section { background: radial-gradient(circle, rgba(10,10,15,0.7) 0%, rgba(5,5,8,0) 70%); }
+        .chevron {
+            margin-top: 50px; width: 40px; height: 40px;
+            border-right: 3px solid var(--gold); border-bottom: 3px solid var(--gold);
+            transform: rotate(45deg); cursor: pointer; animation: bounce 2s infinite; z-index: 5;
+        }
+
+        /* --- Story Text Overlay --- */
+        .story-wrapper {
+            position: sticky; top: 0; height: 100vh; width: 100%;
+            display: flex; justify-content: center; align-items: center; pointer-events: none; z-index: 10;
+        }
+        .story-line {
+            position: absolute; opacity: 0; font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-style: italic;
+            color: var(--gold); max-width: 800px; padding: 20px 50px; text-align: center;
+            background: rgba(5, 5, 8, 0.7); backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(212, 175, 55, 0.5); border-bottom: 1px solid rgba(212, 175, 55, 0.5);
+            border-radius: 50px; width: 90%;
+        }
+
+        /* --- Details Section --- */
+        .details-grid { display: flex; gap: 3rem; margin-top: 3rem; margin-bottom: 2rem; width: 100%; justify-content: center; flex-wrap: wrap; z-index: 5; }
+        .detail-card {
+            background: rgba(10, 10, 15, 0.6); padding: 2.5rem; border: 1px solid rgba(255,255,255,0.05);
+            border-top: 2px solid var(--gold); backdrop-filter: blur(15px); min-width: 280px;
+        }
+        .btn-map {
+            display: inline-block; margin-top: 2.5rem; padding: 12px 30px; background: transparent;
+            border: 1px solid var(--gold); color: var(--gold); text-decoration: none;
+            font-family: 'Cinzel', serif; letter-spacing: 2px; transition: all 0.4s ease; text-transform: uppercase;
+        }
+        .btn-map:hover { background: var(--gold); color: var(--bg-color); box-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+
+        /* --- Thanks Section --- */
+        .thanks-text { font-size: 1.4rem; line-height: 1.8; color: #eee; margin-bottom: 2.5rem; }
+        .signature-text { font-family: 'Great Vibes', cursive; font-size: 4rem; color: var(--gold); margin-top: 1rem; }
+
+        /* --- Lightbox --- */
+        #lightbox {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 10000;
+            display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(10px);
+        }
+        #lightbox.active { opacity: 1; pointer-events: auto; }
+        #lightbox-img { max-width: 90%; max-height: 80%; border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); }
+        .lightbox-btn {
+            position: absolute; background: transparent; border: none; color: var(--gold);
+            font-size: 3rem; cursor: pointer; padding: 20px; font-family: 'Cinzel', serif; transition: transform 0.3s;
+        }
+        .lightbox-btn:hover { transform: scale(1.2); }
+        #lb-prev { left: 2%; } #lb-next { right: 2%; } #lb-close { top: 2%; right: 2%; font-size: 2.5rem; }
+
+        @keyframes bounce { 0%, 100% {transform: translateY(0) rotate(45deg);} 50% {transform: translateY(15px) rotate(45deg);} }
+
+        /* --- Mobile Responsive Optimizations --- */
+        @media (max-width: 1024px) {
+            .groom-bio { left: 1%; width: 320px; }
+            .bride-bio { right: 1%; width: 320px; }
+        }
+        @media (max-width: 768px) {
+            .the-wedding-of { font-size: 1.1rem; margin-bottom: -5px; }
+            .hero-title { font-size: 3.8rem; padding: 10px 20px; }
+            .yth-container { padding: 1.5rem; }
+            .guest-name { font-size: 1.5rem; min-width: 200px; }
+            .section-title { font-size: 2.2rem; }
+            
+            .gold-border-frame { background-size: 40px 40px; top: 2vh; bottom: 2vh; left: 3vw; right: 3vw; }
+            #couple-section .section-title { margin-top: 3vh; }
+
+            .couple-image { height: 60vh; transform: scale(1.02); }
+            .couple-container { flex-direction: column-reverse; height: auto; gap: 1.5rem; }
+            .couple-text { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 100%; max-width: 100%; }
+            .groom-bio { border-left: none; border-top: 2px solid var(--gold); padding-top: 1.5rem; }
+            .bride-bio { border-right: none; border-bottom: 2px solid var(--gold); padding-bottom: 1.5rem; }
+            
+            .details-grid { flex-direction: column; gap: 1.5rem; align-items: center; }
+            .detail-card { width: 100%; }
+            .countdown { gap: 1.5rem; font-size: 1.8rem; }
+            .glass-panel { padding: 2rem 1.5rem; }
+            .story-line { font-size: 1.3rem; padding: 15px 25px; }
+            #lb-prev { left: -10px; } #lb-next { right: -10px; }
+            .thanks-text { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lightbox">
+        <button class="lightbox-btn" id="lb-close">✕</button>
+        <button class="lightbox-btn" id="lb-prev">‹</button>
+        <img id="lightbox-img" src="" alt="Prewedding Photo">
+        <button class="lightbox-btn" id="lb-next">›</button>
+    </div>
+
+    <div id="loader">
+        <div id="loader-text">Mempersiapkan Memori...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    </div>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <main id="scroll-area">
+        
+        <section id="intro-section">
+            <div class="gold-border-frame" id="intro-frame"></div>
+            
+            <div id="intro-content-wrapper">
+                <div class="hero-title-wrapper">
+                    <p class="the-wedding-of">The Wedding of</p>
+                    <h1 class="hero-title" id="brush-text">Ilham & Nina</h1>
+                </div>
+                <div class="yth-container">
+                    <p>Kepada Yth.<br>Bapak/Ibu/Saudara/i:</p>
+                    <span class="guest-name" id="guest-name">Nama Tamu</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="glass-panel">
+                <p>Tanpa mengurangi rasa hormat, kami memberikan kabar bahagia ini dan memohon restu dari rekan sekalian untuk senantiasa mendoakan kelancaran acara pernikahan kami.</p>
+                <div class="countdown" id="countdown-timer">
+                    <div><span id="days">00</span><span>Hari</span></div>
+                    <div><span id="hours">00</span><span>Jam</span></div>
+                    <div><span id="minutes">00</span><span>Menit</span></div>
+                    <div><span id="seconds">00</span><span>Detik</span></div>
+                </div>
+                <p class="quote-text">"Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu istri-istri dari jenismu sendiri, supaya kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya diantaramu rasa kasih dan sayang. Sesungguhnya pada yang demikian itu benar-benar terdapat tanda-tanda bagi kaum yang berfikir"<br><br><span style="color:var(--gold); font-family: 'Cinzel', serif;">- Qs. Ar-Rum : 21 -</span></p>
+            </div>
+        </section>
+
+        <section id="couple-section">
+            <div class="gold-border-frame" style="opacity: 1;"></div>
+            
+            <h2 class="section-title">Sang Mempelai</h2>
+            <div class="couple-container">
+                <div class="couple-text groom-bio" id="groom-box">
+                    <h3>Muhammad Ilham Maulana S.Kom.</h3>
+                    <p>Putra dari Bapak Zulkarnain dan Ibu Nurhasanah Ibrahim S.Pd.</p>
+                </div>
+                
+                <div class="couple-image-wrapper">
+                    <img src="IMG_6826.png" alt="Ilham dan Nina" class="couple-image" id="couple-img">
+                </div>
+
+                <div class="couple-text bride-bio" id="bride-box">
+                    <h3>Nanda Karina Satriani S.M.</h3>
+                    <p>Putri dari Bapak Agus Satriawan (Alm) dan Ibu Eliya Mariani</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="interlude-section">
+            <h2 class="section-title">Our Story</h2>
+            <p style="font-size: 1.2rem; color: #ccc; max-width: 600px; line-height: 1.6;">Sebuah perjalanan panjang menyusuri waktu, merekam setiap tawa, dan menyimpan setiap kenangan. Mari berjalan sejenak menyusuri kisah kami...</p>
+            <div class="chevron" id="scroll-to-photos"></div>
+        </section>
+
+        <div class="tunnel-track" id="tunnel-trigger">
+            <div class="story-wrapper">
+                <p class="story-line">Kisah kami bermula dari kesederhanaan...</p>
+                <p class="story-line">Langkah demi langkah, menyatukan dua dunia...</p>
+                <p class="story-line">Melewati tawa, air mata, dan harapan...</p>
+                <p class="story-line">Hingga kami memutuskan melangkah bersama...</p>
+                <p class="story-line">Menuju takdir yang telah dituliskan-Nya.</p>
+            </div>
+        </div>
+
+        <section id="details-section">
+            <h2 class="section-title">Wedding Details</h2>
+            <div class="details-grid">
+                <div class="detail-card">
+                    <h3>Akad</h3>
+                    <p style="font-size: 1.2rem; color: #ccc;">Minggu, 5 Juli 2026</p>
+                    <p style="font-size: 1.2rem; color: #ccc;">08:00 WITA</p>
+                </div>
+                <div class="detail-card">
+                    <h3>Resepsi</h3>
+                    <p style="font-size: 1.2rem; color: #ccc;">Minggu, 5 Juli 2026</p>
+                    <p style="font-size: 1.2rem; color: #ccc;">11:00 WITA</p>
+                </div>
+            </div>
+            <div class="glass-panel" style="margin-top: 2rem; padding: 2rem; max-width: 600px;">
+                <p><strong style="color: var(--gold); font-family: 'Cinzel', serif; font-size: 1.5rem;">Grand Imperial Ballroom</strong></p><br>
+                <p style="font-size: 1.2rem; color: #ccc;">Jl. Panji Tilar Negara, Kekalik Jaya,<br>Kec. Sekarbela, Kota Mataram,<br>Nusa Tenggara Bar. 83115</p>
+                <a href="https://maps.app.goo.gl/nq4KYEjghAB7uciw9" target="_blank" class="btn-map">Open Map</a>
+            </div>
+        </section>
+
+        <section id="thanks-section">
+            <div class="glass-panel">
+                <p class="thanks-text">Merupakan suatu kebahagiaan dan kehormatan bagi kami, apabila Bapak/Ibu/Saudara/i, berkenan hadir dan memberikan do'a restu kepada kedua mempelai.</p>
+                <p style="font-family: 'Cinzel', serif; letter-spacing: 3px; font-size: 1.1rem; color: #aaa;">Hormat Kami yang Mengundang</p>
+                <p class="signature-text">Ilham & Nina</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+        const images = [
+            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
+            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
+            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
+            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
+            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
+            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
+            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+        ];
+
+        // --- Core Strict Tuning ---
+        const zSpacing = 6; 
+        const tunnelDepth = images.length * zSpacing;
+        const strictDuration = 21; // Enforced strict 21 seconds auto-scroll duration
+
+        document.getElementById('tunnel-trigger').style.height = `${images.length * 40}vh`;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const guestName = urlParams.get('to');
+        if(guestName) document.getElementById('guest-name').innerText = guestName;
+
+        // --- 1. Audio Setup ---
+        const bgAudio = new Audio('Sore.mp3');
+        bgAudio.loop = false; 
+
+        // --- 2. Loading Management ---
+        const manager = new THREE.LoadingManager();
+        manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+            document.getElementById('progress').style.width = (itemsLoaded / itemsTotal * 100) + '%';
+        };
+        manager.onLoad = function () {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                    gsap.to('#brush-text', { webkitMaskPosition: '0% 0', duration: 3, ease: 'power2.inOut' });
+                    ScrollTrigger.refresh();
+                }, 1000);
+            }, 500);
+        };
+
+        // --- 3. 3D Setup ---
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050508, 0.035);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        const composer = new THREE.EffectComposer(renderer);
+        composer.addPass(new THREE.RenderPass(scene, camera));
+        const bokehPass = new THREE.BokehPass(scene, camera, { focus: 8.0, aperture: 0.002, maxblur: 0.015, width: window.innerWidth, height: window.innerHeight });
+        composer.addPass(bokehPass);
+
+        const ambientGroup = new THREE.Group();
+        const pGeo = new THREE.BufferGeometry();
+        const pPos = new Float32Array(1500 * 3);
+        for(let i=0; i<4500; i++) pPos[i] = (Math.random() - 0.5) * 80;
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+        ambientGroup.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 0.04, color: 0xD4AF37, transparent: true, opacity: 0.5 })));
+        scene.add(ambientGroup);
+
+        const textureLoader = new THREE.TextureLoader(manager);
+        const planes = [];
+
+        images.forEach((imgSrc, index) => {
+            textureLoader.load(imgSrc, (texture) => {
+                const imgAspect = texture.image.height > 0 ? (texture.image.width / texture.image.height) : 1.5;
+                const height = 4.5; 
+                const width = height * imgAspect;
+                const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.95 }));
+
+                // Varied spatial configuration mapping (Left, Right, Top, Bottom)
+                const placementPattern = index % 4;
+                let posX = 0;
+                let posY = 0;
+
+                if (placementPattern === 0) { // Left Core Area
+                    posX = -(4 + Math.random() * 3);
+                    posY = (Math.random() - 0.5) * 3;
+                    plane.rotation.y = -0.15;
+                } else if (placementPattern === 1) { // Right Core Area
+                    posX = (4 + Math.random() * 3);
+                    posY = (Math.random() - 0.5) * 3;
+                    plane.rotation.y = 0.15;
+                } else if (placementPattern === 2) { // Top Arch Area
+                    posX = (Math.random() - 0.5) * 6;
+                    posY = (3.5 + Math.random() * 2.5);
+                    plane.rotation.x = 0.15;
+                } else { // Bottom Foundation Area
+                    posX = (Math.random() - 0.5) * 6;
+                    posY = -(3.5 + Math.random() * 2.5);
+                    plane.rotation.x = -0.15;
+                }
+
+                const posZ = -10 - (index * zSpacing);
+                plane.position.set(posX, posY, posZ);
+                plane.userData = { index: index, floatY: Math.random() * 0.005, floatX: Math.random() * 0.005 };
+
+                scene.add(plane);
+                planes.push(plane);
+            });
+        });
+
+        // --- 4. Logic Guards & Lock Variables ---
+        let isTunnelUnlocked = false;
+        let isUserScrollLocked = false;
+        let autoScrollTween;
+        let isInsideTunnel = false;
+
+        // --- 5. Interlude Scroll Lock ---
+        function interceptScroll(e) {
+            if (isUserScrollLocked) { e.preventDefault(); return; }
+            if (isTunnelUnlocked) return;
+            const interlude = document.getElementById('interlude-section');
+            if (!interlude) return;
+            const rect = interlude.getBoundingClientRect();
+            if (rect.top <= 10 && rect.top > -10) {
+                if (e.type === 'wheel' && e.deltaY > 0) { e.preventDefault(); }
+                if (e.type === 'keydown' && ["ArrowDown", "PageDown", " ", "End"].includes(e.code)) { e.preventDefault(); }
+            }
+        }
+        
+        let touchStartY = 0;
+        window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: true});
+        window.addEventListener('touchmove', e => {
+            if (isUserScrollLocked) { e.preventDefault(); return; }
+            if (isTunnelUnlocked) return;
+            let deltaY = touchStartY - e.touches[0].clientY; 
+            const interlude = document.getElementById('interlude-section');
+            if (!interlude) return;
+            const rect = interlude.getBoundingClientRect();
+            if (rect.top <= 10 && rect.top > -10 && deltaY > 0) { e.preventDefault(); }
+        }, {passive: false});
+
+        window.addEventListener('wheel', interceptScroll, {passive: false});
+        window.addEventListener('keydown', interceptScroll, {passive: false});
+
+        // --- 6. The Chevron Gateway & Auto-Scroll Logic ---
+        document.getElementById('scroll-to-photos').addEventListener('click', () => {
+            isTunnelUnlocked = true;
+            document.documentElement.style.scrollSnapType = 'none'; 
+            
+            gsap.to(window, { 
+                scrollTo: "#tunnel-trigger", 
+                duration: 1.5, 
+                ease: "power2.inOut",
+                onComplete: () => {
+                    bgAudio.currentTime = 0; bgAudio.volume = 0;
+                    let playPromise = bgAudio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => { gsap.to(bgAudio, { volume: 1, duration: 1 }); }).catch(e => e);
+                    }
+
+                    isUserScrollLocked = true;
+                    setTimeout(() => { isUserScrollLocked = false; }, 3000);
+
+                    if(autoScrollTween) autoScrollTween.kill();
+                    autoScrollTween = gsap.to(window, {
+                        scrollTo: { y: "#details-section", autoKill: true },
+                        duration: strictDuration, // Strict 21 seconds runtime locked in place
+                        ease: "none",
+                        onComplete: () => { document.documentElement.style.scrollSnapType = 'y mandatory'; }
+                    });
+                }
+            });
+        });
+
+        // HARD RESET
+        ScrollTrigger.create({
+            trigger: "#details-section",
+            start: "top bottom", 
+            onLeaveBack: () => {
+                isTunnelUnlocked = false; 
+                gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
+                if(autoScrollTween) autoScrollTween.kill();
+                gsap.set(window, { scrollTo: "#interlude-section" });
+                document.documentElement.style.scrollSnapType = 'y mandatory'; 
+            }
+        });
+
+        // --- 7. Connecting Animations ---
+        ScrollTrigger.create({
+            trigger: "#tunnel-trigger",
+            start: "top bottom",
+            end: "bottom top",
+            onEnter: () => isInsideTunnel = true,
+            onEnterBack: () => isInsideTunnel = true,
+            onLeave: () => { isInsideTunnel = false; document.body.style.cursor = 'default'; },
+            onLeaveBack: () => { isInsideTunnel = false; document.body.style.cursor = 'default'; }
+        });
+
+        camera.position.z = 10;
+
+        gsap.to(['#intro-content-wrapper', '#intro-frame'], {
+            scrollTrigger: { trigger: '#intro-section', start: 'top top', end: 'bottom center', scrub: true },
+            opacity: 0, y: -50, filter: 'blur(5px)', ease: "none"
+        });
+
+        gsap.to(camera.position, {
+            z: -tunnelDepth - 5, ease: "none",
+            scrollTrigger: { trigger: "#tunnel-trigger", start: "top top", end: "bottom top", scrub: true }
+        });
+
+        const storyLines = gsap.utils.toArray('.story-line');
+        storyLines.forEach((line, i) => {
+            gsap.timeline({
+                scrollTrigger: { trigger: "#tunnel-trigger", start: `${(i / storyLines.length) * 100}% top`, end: `${((i + 1) / storyLines.length) * 100}% top`, scrub: true }
+            }).fromTo(line, { opacity: 0, scale: 0.9, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.3 })
+              .to(line, { opacity: 1, duration: 0.4 }) 
+              .to(line, { opacity: 0, scale: 1.05, y: -30, duration: 0.3 });
+        });
+
+        gsap.from("#couple-img", { scrollTrigger: { trigger: "#couple-section", start: "top 70%" }, opacity: 0, scale: 0.9, y: 50, duration: 1.5, ease: "power3.out" });
+        const isDesktop = window.innerWidth > 992;
+        gsap.from("#groom-box", { scrollTrigger: { trigger: "#couple-section", start: "top 60%" }, opacity: 0, x: isDesktop ? -40 : 0, y: isDesktop ? 0 : 30, duration: 1.2, delay: 0.3, ease: "power2.out" });
+        gsap.from("#bride-box", { scrollTrigger: { trigger: "#couple-section", start: "top 60%" }, opacity: 0, x: isDesktop ? 40 : 0, y: isDesktop ? 0 : 30, duration: 1.2, delay: 0.6, ease: "power2.out" });
+
+        // --- 8. Render & Interaction ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let hoveredPlane = null;
+        let isLightboxOpen = false;
+        let currentImgIndex = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            if(isLightboxOpen) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        window.addEventListener('click', () => {
+            if(isLightboxOpen || hoveredPlane === null || !isInsideTunnel) return;
+            openLightbox(hoveredPlane.userData.index);
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            if(isLightboxOpen || e.touches.length === 0 || !isInsideTunnel) return;
+            mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(planes);
+            if(intersects.length > 0) openLightbox(intersects[0].object.userData.index);
+        }, {passive: true});
+
+        function openLightbox(index) {
+            isLightboxOpen = true; currentImgIndex = index;
+            document.getElementById('lightbox-img').src = images[currentImgIndex];
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        document.getElementById('lb-close').addEventListener('click', (e) => { e.stopPropagation(); isLightboxOpen = false; document.getElementById('lightbox').classList.remove('active'); });
+        document.getElementById('lb-prev').addEventListener('click', (e) => { e.stopPropagation(); currentImgIndex = (currentImgIndex - 1 + images.length) % images.length; document.getElementById('lightbox-img').src = images[currentImgIndex]; });
+        document.getElementById('lb-next').addEventListener('click', (e) => { e.stopPropagation(); currentImgIndex = (currentImgIndex + 1) % images.length; document.getElementById('lightbox-img').src = images[currentImgIndex]; });
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+            ambientGroup.rotation.z = time * 0.02;
+
+            planes.forEach((plane, i) => {
+                plane.position.y += Math.sin(time + i) * plane.userData.floatY;
+                plane.position.x += Math.cos(time + i) * plane.userData.floatX;
+            });
+
+            if(!isLightboxOpen && isInsideTunnel) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(planes);
+                if (intersects.length > 0) {
+                    document.body.style.cursor = 'pointer';
+                    if (hoveredPlane !== intersects[0].object) {
+                        if(hoveredPlane) gsap.to(hoveredPlane.scale, {x: 1, y: 1, duration: 0.3});
+                        hoveredPlane = intersects[0].object;
+                        gsap.to(hoveredPlane.scale, {x: 1.08, y: 1.08, duration: 0.3}); 
+                    }
+                } else {
+                    document.body.style.cursor = 'default';
+                    if (hoveredPlane) { gsap.to(hoveredPlane.scale, {x: 1, y: 1, duration: 0.3}); hoveredPlane = null; }
+                }
+            } else if (!isInsideTunnel && hoveredPlane) {
+                gsap.to(hoveredPlane.scale, {x: 1, y: 1, duration: 0.3}); hoveredPlane = null;
+            }
+            
+            composer.render();
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight);
+            bokehPass.uniforms['aspect'].value = window.innerWidth / window.innerHeight;
+        });
+
+        // Countdown Logic
+        const targetDate = new Date("2026-07-05T08:00:00+08:00").getTime();
+        setInterval(() => {
+            const distance = targetDate - new Date().getTime();
+            if (distance < 0) return;
+            document.getElementById("days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+            document.getElementById("hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            document.getElementById("minutes").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            document.getElementById("seconds").innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+        }, 1000);
+    </script>
+</body>
+</html>

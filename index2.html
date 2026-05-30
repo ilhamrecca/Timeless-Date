@@ -606,12 +606,12 @@
                     if(autoScrollTween) autoScrollTween.kill();
                     
                     autoScrollTween = gsap.to(window, {
-                        scrollTo: { y: "#details-section", offsetY: -100, autoKill: false },
+                        scrollTo: { y: "#details-section", offsetY: -1000, autoKill: false },
                         duration: strictDuration,
                         ease: "none",
                         onComplete: () => { 
                             document.documentElement.style.scrollSnapType = 'y mandatory'; 
-                            setTimeout(() => { allowTunnelReset = true; }, 2500);
+                            setTimeout(() => { allowTunnelReset = false; }, 2500);
                         }
                     });
                 }

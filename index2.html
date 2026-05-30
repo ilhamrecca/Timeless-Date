@@ -588,6 +588,7 @@
                         ease: "none",
                         onComplete: () => { 
                             document.documentElement.style.scrollSnapType = 'y mandatory'; 
+                            // Give Safari 2.5 seconds to settle its native bouncing physics before enabling reset
                             setTimeout(() => { allowTunnelReset = true; }, 2500);
                         }
                     });

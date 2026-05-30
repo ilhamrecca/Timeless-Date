@@ -120,8 +120,6 @@
             -webkit-mask-image: linear-gradient(to right, black 45%, transparent 55%);
             -webkit-mask-size: 250% 100%; -webkit-mask-position: 100% 0;
         }
-        .mobile-break { display: none; }
-        .ampersand { display: inline; }
 
         /* --- UI Elements --- */
         h2, h3 { font-family: 'Cinzel', serif; font-weight: 400; color: var(--gold); }
@@ -237,10 +235,7 @@
         @media (max-width: 768px) {
             .the-wedding-of { font-size: 1.1rem; margin-bottom: -5px; }
             
-            /* Stack "Ilham & Nina" cleanly on mobile */
-            .mobile-break { display: block; }
-            .ampersand { font-size: 0.6em; display: inline-block; margin: 10px 0; }
-            .hero-title { font-size: 3.8rem; padding: 10px 20px; white-space: normal; line-height: 1; text-align: center; }
+            .hero-title { font-size: 3.8rem; padding: 10px 20px; }
             
             .yth-container { padding: 1.5rem; }
             .guest-name { font-size: 1.5rem; min-width: 200px; }
@@ -248,6 +243,7 @@
             
             .gold-border-frame { background-size: 40px 40px; top: 2vh; bottom: 2vh; left: 3vw; right: 3vw; }
             
+            /* --- FIX: Mobile Couple Section Overflow --- */
             #couple-section { 
                 height: 100dvh !important; 
                 max-height: 100dvh !important; 
@@ -336,9 +332,7 @@
             <div id="intro-content-wrapper">
                 <div class="hero-title-wrapper">
                     <p class="the-wedding-of">The Wedding of</p>
-                    <h1 class="hero-title" id="brush-text">
-                        Ilham<br class="mobile-break"><span class="ampersand">&</span><br class="mobile-break">Nina
-                    </h1>
+                    <h1 class="hero-title" id="brush-text">Ilham & Nina</h1>
                 </div>
                 <div class="yth-container">
                     <p>Kepada Yth.<br>Bapak/Ibu/Saudara/i:</p>
@@ -605,9 +599,8 @@
 
                     if(autoScrollTween) autoScrollTween.kill();
                     
-                    // Let the scroll settle perfectly onto the section without an offset
                     autoScrollTween = gsap.to(window, {
-                        scrollTo: { y: "#details-section", autoKill: false },
+                        scrollTo: { y: "#details-section", offsetY: -30, autoKill: false },
                         duration: strictDuration,
                         ease: "none",
                         onComplete: () => { 

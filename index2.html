@@ -610,8 +610,14 @@
                         duration: strictDuration,
                         ease: "none",
                         onComplete: () => { 
-                            document.documentElement.style.scrollSnapType = 'y mandatory'; 
-                            setTimeout(() => { allowTunnelReset = false; }, 2500);
+                            // wait for Safari momentum scrolling to fully settle
+                            setTimeout(() => {
+                                document.documentElement.style.scrollSnapType = 'y mandatory';
+                            }, 700);
+
+                            setTimeout(() => {
+                                allowTunnelReset = false;
+                            }, 2500);
                         }
                     });
                 }

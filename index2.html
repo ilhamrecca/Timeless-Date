@@ -105,7 +105,7 @@
             display: inline-block; border-bottom: 1px solid var(--gold); padding-bottom: 5px; min-width: 250px;
         }
 
-        /* --- Calligraphy Title & Mobile Break Setup --- */
+        /* --- Calligraphy Title --- */
         .hero-title-wrapper {
             display: flex; flex-direction: column; align-items: center;
             margin-bottom: 10px; overflow: visible; width: 100%;
@@ -139,11 +139,14 @@
         #couple-section { 
             height: 100vh; max-height: 100vh; overflow: hidden; padding: 0; 
         }
-        #couple-section .section-title { margin-top: 10vh; }
+        #couple-section .section-title { 
+            margin-top: 10vh; 
+        }
         
         .couple-container {
             display: flex; align-items: center; justify-content: center;
-            max-width: 1400px; width: 100%; position: relative; z-index: 5; height: 80vh; 
+            max-width: 1400px; width: 100%; position: relative; z-index: 5;
+            height: 80vh; 
         }
         .couple-image-wrapper { flex-shrink: 0; position: relative; z-index: 2; height: 100%; display: flex; align-items: center; }
         
@@ -192,10 +195,7 @@
             border-radius: 50px; width: 90%;
         }
 
-        /* --- Details Section (Visually Pushed Down Fix) --- */
-        #details-section {
-            padding-top: 12vh; /* This pushes content further down visually without breaking CSS Snap Points */
-        }
+        /* --- Details Section --- */
         .details-grid { display: flex; gap: 3rem; margin-top: 3rem; margin-bottom: 2rem; width: 100%; justify-content: center; flex-wrap: wrap; z-index: 5; }
         .detail-card {
             background: rgba(10, 10, 15, 0.6); padding: 2.5rem; border: 1px solid rgba(255,255,255,0.05);
@@ -228,7 +228,7 @@
 
         @keyframes bounce { 0%, 100% {transform: translateY(0) rotate(45deg);} 50% {transform: translateY(15px) rotate(45deg);} }
 
-        /* --- Strictly Controlled Mobile Responsive Design --- */
+        /* --- Mobile Responsive Optimizations --- */
         @media (max-width: 1024px) {
             .groom-bio { left: 1%; width: 320px; }
             .bride-bio { right: 1%; width: 320px; }
@@ -237,7 +237,7 @@
         @media (max-width: 768px) {
             .the-wedding-of { font-size: 1.1rem; margin-bottom: -5px; }
             
-            /* Dynamic Mobile Line-Breaks for Names */
+            /* Stack "Ilham & Nina" cleanly on mobile */
             .mobile-break { display: block; }
             .ampersand { font-size: 0.6em; display: inline-block; margin: 10px 0; }
             .hero-title { font-size: 3.8rem; padding: 10px 20px; white-space: normal; line-height: 1; text-align: center; }
@@ -254,13 +254,19 @@
                 overflow: hidden !important; 
                 padding: 6dvh 0 !important; 
             }
-            #couple-section .section-title { margin-top: 1vh !important; margin-bottom: 1vh !important; }
+            #couple-section .section-title { 
+                margin-top: 1vh !important; 
+                margin-bottom: 1vh !important; 
+            }
 
             .couple-container { 
                 flex-direction: column; justify-content: center; align-items: center; height: 75dvh; gap: 0; padding-top: 0; 
             }
             
-            .couple-image-wrapper { height: auto !important; margin: 0 !important; }
+            .couple-image-wrapper {
+                height: auto !important;
+                margin: 0 !important;
+            }
             
             .couple-text { 
                 position: relative !important; 
@@ -269,22 +275,29 @@
                 width: 85% !important; 
                 max-width: 320px !important; 
                 margin: 0 auto !important; 
-                padding: 1rem 1.2rem !important; 
+                padding: 1.2rem !important; 
             }
             
-            .groom-bio { border-left: none !important; border-bottom: 2px solid var(--gold) !important; margin-bottom: -15px !important; z-index: 4; }
-            .bride-bio { border-right: none !important; border-top: 2px solid var(--gold) !important; margin-top: -15px !important; z-index: 4; }
+            .groom-bio { 
+                border-left: none !important; border-bottom: 2px solid var(--gold) !important; 
+                margin-bottom: -20px !important; 
+                z-index: 4; 
+            }
+            .bride-bio { 
+                border-right: none !important; border-top: 2px solid var(--gold) !important; 
+                margin-top: -20px !important; 
+                z-index: 4; 
+            }
             
             .couple-text h3 { font-size: 1.1rem; margin-bottom: 0.5rem; line-height: 1.4; }
             .couple-text p { font-size: 0.85rem; line-height: 1.4; }
             
             .couple-image { 
-                height: 28dvh !important; 
-                max-height: 250px !important; 
+                height: 32dvh !important; 
+                max-height: 300px !important; 
                 width: auto; margin: 0 auto !important; transform: scale(1.1); 
             }
             
-            /* Add mobile-specific padding to Details Section */
             #details-section { padding-top: 8vh; }
             .details-grid { flex-direction: column; gap: 1.5rem; align-items: center; }
             .detail-card { width: 100%; }
@@ -292,7 +305,10 @@
             .glass-panel { padding: 2rem 1.5rem; }
             .story-line { font-size: 1.3rem; padding: 15px 25px; }
             #lb-prev { left: -10px; } #lb-next { right: -10px; }
+            
+            /* Shrink Thanks Section signature so it fits on one line */
             .thanks-text { font-size: 1.2rem; }
+            .signature-text { font-size: 2.8rem; } 
         }
     </style>
 </head>
@@ -321,7 +337,7 @@
                 <div class="hero-title-wrapper">
                     <p class="the-wedding-of">The Wedding of</p>
                     <h1 class="hero-title" id="brush-text">
-                        Ilham<br class="mobile-break"><span class="ampersand">&amp;</span><br class="mobile-break">Nina
+                        Ilham<br class="mobile-break"><span class="ampersand">&</span><br class="mobile-break">Nina
                     </h1>
                 </div>
                 <div class="yth-container">
@@ -350,7 +366,7 @@
             <h2 class="section-title">Sang Mempelai</h2>
             <div class="couple-container">
                 <div class="couple-text groom-bio" id="groom-box">
-                    <h3>Muhammad Ilham Maulana&nbsp;S.Kom.</h3>
+                    <h3>Muhammad Ilham <span style="white-space: nowrap;">Maulana S.Kom.</span></h3>
                     <p>Putra dari Bapak Zulkarnain dan Ibu Nurhasanah Ibrahim S.Pd.</p>
                 </div>
                 
@@ -359,7 +375,7 @@
                 </div>
 
                 <div class="couple-text bride-bio" id="bride-box">
-                    <h3>Nanda Karina Satriani&nbsp;S.M.</h3>
+                    <h3>Nanda Karina <span style="white-space: nowrap;">Satriani S.M.</span></h3>
                     <p>Putri dari Bapak Agus Satriawan (Alm) dan Ibu Eliya Mariani</p>
                 </div>
             </div>
@@ -537,7 +553,7 @@
         let isUserScrollLocked = false;
         let autoScrollTween;
         let isInsideTunnel = false;
-        let hasLandedOnDetails = false; 
+        let allowTunnelReset = false;
 
         // --- 5. Interlude Scroll Lock ---
         function interceptScroll(e) {
@@ -570,7 +586,7 @@
         // --- 6. The Chevron Gateway & Safari Scroll Fix ---
         document.getElementById('scroll-to-photos').addEventListener('click', () => {
             isTunnelUnlocked = true;
-            hasLandedOnDetails = false; 
+            allowTunnelReset = false; 
             document.documentElement.style.scrollSnapType = 'none'; 
             
             bgAudio.currentTime = 0; 
@@ -589,14 +605,14 @@
 
                     if(autoScrollTween) autoScrollTween.kill();
                     
-                    // Removed the offset trigger so CSS physics aligns perfectly at 0
+                    // Let the scroll settle perfectly onto the section without an offset
                     autoScrollTween = gsap.to(window, {
                         scrollTo: { y: "#details-section", autoKill: false },
                         duration: strictDuration,
                         ease: "none",
                         onComplete: () => { 
                             document.documentElement.style.scrollSnapType = 'y mandatory'; 
-                            setTimeout(() => { hasLandedOnDetails = true; }, 1000);
+                            setTimeout(() => { allowTunnelReset = true; }, 2500);
                         }
                     });
                 }
@@ -607,27 +623,27 @@
             if (!isUserScrollLocked && autoScrollTween && autoScrollTween.isActive() && isTunnelUnlocked) {
                 autoScrollTween.kill();
                 document.documentElement.style.scrollSnapType = 'y mandatory';
-                setTimeout(() => { hasLandedOnDetails = true; }, 1000);
+                setTimeout(() => { allowTunnelReset = true; }, 2500);
             }
         }
         window.addEventListener('wheel', manualInterrupt, {passive: true});
         window.addEventListener('touchmove', manualInterrupt, {passive: true});
 
-        // PHYSICAL CAMERA RESET: Completely ignores Safari bounces. 
-        // Only triggers if the previous section physically comes back into view.
-        window.addEventListener('scroll', () => {
-            if (hasLandedOnDetails && isTunnelUnlocked) {
-                const interludeRect = document.getElementById('interlude-section').getBoundingClientRect();
-                
-                // If user scrolls up deeply enough to pull the bottom of the interlude section down 20% of the screen
-                if (interludeRect.bottom > window.innerHeight * 0.2) {
-                    isTunnelUnlocked = false; 
-                    hasLandedOnDetails = false;
-                    gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
-                    gsap.set(window, { scrollTo: "#interlude-section" });
-                }
+        // --- THE ULTIMATE SAFARI RESET FIX ---
+        // Attached to the tunnel, NOT the Details section. Safari can bounce all it wants on Details.
+        ScrollTrigger.create({
+            trigger: "#tunnel-trigger",
+            start: "bottom 30%", // User must scroll way back up into the falling photos to trigger a reset
+            onEnterBack: () => {
+                if(!allowTunnelReset) return; 
+                isTunnelUnlocked = false; 
+                allowTunnelReset = false;
+                gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
+                if(autoScrollTween) autoScrollTween.kill();
+                gsap.set(window, { scrollTo: "#interlude-section" });
+                document.documentElement.style.scrollSnapType = 'y mandatory'; 
             }
-        }, {passive: true});
+        });
 
         // --- 7. Connecting Animations ---
         ScrollTrigger.create({

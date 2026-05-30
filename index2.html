@@ -239,11 +239,8 @@
             .section-title { font-size: 2.2rem; }
             
             .gold-border-frame { background-size: 40px 40px; top: 2vh; bottom: 2vh; left: 3vw; right: 3vw; }
-            
-            /* Reduced mobile margin so titles don't get squished */
             #couple-section .section-title { margin-top: 3vh; }
 
-            /* New MOBILE REORDERING: Groom on Top */
             .couple-container { flex-direction: column; justify-content: flex-start; height: auto; padding-top: 1rem; }
             .couple-text { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 100%; max-width: 100%; margin: 1rem 0; padding: 1.5rem; }
             .groom-bio { border-left: none; border-top: 2px solid var(--gold); margin-bottom: 0; }
@@ -386,7 +383,6 @@
             "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg"
         ];
 
-        // --- Core Strict Tuning ---
         const zSpacing = 6; 
         const tunnelDepth = images.length * zSpacing;
         const strictDuration = 21; 
@@ -426,7 +422,7 @@
             }, 500);
         }
 
-        // --- 3. 3D Setup ---
+        // --- 3. 3D Setup & Depth of Field ---
         const canvas = document.getElementById('webgl-canvas');
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x050508, 0.035);
@@ -435,13 +431,14 @@
         const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
         
-        // BOKEH FIX: Set focus deeper into the tunnel (25.0) and widened aperture
         const composer = new THREE.EffectComposer(renderer);
         composer.addPass(new THREE.RenderPass(scene, camera));
+        
+        // CRITICAL FIX: Drastically lowered maxblur and aperture so photos are sharp
         const bokehPass = new THREE.BokehPass(scene, camera, { 
-            focus: 25.0, 
-            aperture: 0.001, 
-            maxblur: 0.01, 
+            focus: 20.0, 
+            aperture: 0.0001,  // Deep depth of field = sharper images
+            maxblur: 0.005,    // Removed extreme blur
             width: window.innerWidth, 
             height: window.innerHeight 
         });
@@ -503,6 +500,7 @@
         let isUserScrollLocked = false;
         let autoScrollTween;
         let isInsideTunnel = false;
+        let rideComplete = false;
         let allowTunnelReset = false;
 
         // --- 5. Interlude Scroll Lock ---
@@ -533,10 +531,11 @@
         window.addEventListener('wheel', interceptScroll, {passive: false});
         window.addEventListener('keydown', interceptScroll, {passive: false});
 
-        // --- 6. The Chevron Gateway & Safari Scroll Fix ---
+        // --- 6. The Safari-Bulletproof Auto-Scroll ---
         document.getElementById('scroll-to-photos').addEventListener('click', () => {
             isTunnelUnlocked = true;
-            allowTunnelReset = false; 
+            allowTunnelReset = false;
+            rideComplete = false; 
             document.documentElement.style.scrollSnapType = 'none'; 
             
             bgAudio.currentTime = 0; 
@@ -561,29 +560,35 @@
                         ease: "none",
                         onComplete: () => { 
                             document.documentElement.style.scrollSnapType = 'y mandatory'; 
-                            setTimeout(() => { allowTunnelReset = true; }, 1000);
+                            rideComplete = true; // Flags that the ride is over, waiting for human touch
                         }
                     });
                 }
             });
         });
 
-        function manualInterrupt() {
+        // Human Interaction Tracker - Safari native programmatic bounces CANNOT trigger this.
+        function humanInteraction() {
+            if (rideComplete) {
+                allowTunnelReset = true; // Only unlocks reset AFTER user physically touches the screen
+            }
             if (!isUserScrollLocked && autoScrollTween && autoScrollTween.isActive() && isTunnelUnlocked) {
                 autoScrollTween.kill();
                 document.documentElement.style.scrollSnapType = 'y mandatory';
-                setTimeout(() => { allowTunnelReset = true; }, 1000);
+                rideComplete = true; 
             }
         }
-        window.addEventListener('wheel', manualInterrupt, {passive: true});
-        window.addEventListener('touchmove', manualInterrupt, {passive: true});
+        window.addEventListener('wheel', humanInteraction, {passive: true});
+        window.addEventListener('touchstart', humanInteraction, {passive: true});
 
         ScrollTrigger.create({
             trigger: "#details-section",
-            start: "top 80%", 
+            start: "top 85%", 
             onLeaveBack: () => {
-                if(!allowTunnelReset) return; 
+                if(!allowTunnelReset) return; // Completely ignores Safari's automatic snap bounces
                 isTunnelUnlocked = false; 
+                allowTunnelReset = false;
+                rideComplete = false;
                 gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
                 if(autoScrollTween) autoScrollTween.kill();
                 gsap.set(window, { scrollTo: "#interlude-section" });

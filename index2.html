@@ -428,7 +428,13 @@
             "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
             "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
             "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
-            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg"
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
+            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
+            "HER01526.jpg", "HER01481.jpg", "HER01377.jpg", "HER00996.jpg", 
+            "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg",
+            "ANG_0584.JPG", "ANG_0475.JPG", "HER02447 Copy.JPG", "HER02474.jpg", 
+            "HER02290.jpg", "HER02043.jpg", "HER01875.jpg", "HER01627.jpg", 
         ];
 
         const zSpacing = 6; 
@@ -600,7 +606,7 @@
                     if(autoScrollTween) autoScrollTween.kill();
                     
                     autoScrollTween = gsap.to(window, {
-                        scrollTo: { y: "#details-section", offsetY: -30, autoKill: false },
+                        scrollTo: { y: "#details-section", offsetY: +30, autoKill: false },
                         duration: strictDuration,
                         ease: "none",
                         onComplete: () => { 

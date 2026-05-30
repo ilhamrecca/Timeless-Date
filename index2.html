@@ -633,7 +633,7 @@
                 allowTunnelReset = false;
                 gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
                 if(autoScrollTween) autoScrollTween.kill();
-                gsap.set(window, { scrollTo: "#interlude-section" });
+                gsap.set(window, { scrollTo: "#details-section" });
                 document.documentElement.style.scrollSnapType = 'y mandatory'; 
             }
         });

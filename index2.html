@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wedding Invitation | Ilham & Nina</title>
     
+    <link rel="icon" href="data:,">
+    
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Great+Vibes&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -121,25 +123,28 @@
 
         /* --- UI Elements --- */
         h2, h3 { font-family: 'Cinzel', serif; font-weight: 400; color: var(--gold); }
-        .section-title { font-size: 3rem; margin-bottom: 3rem; letter-spacing: 4px; z-index: 5; }
+        .section-title { font-size: 3rem; margin-bottom: 3rem; letter-spacing: 4px; z-index: 5;}
         .glass-panel {
             max-width: 850px; background: rgba(10, 10, 15, 0.4); padding: 4rem 3rem;
             border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 8px;
-            backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; z-index: 5;
+            backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%;
         }
         .countdown { display: flex; gap: 3rem; margin: 3rem 0; font-family: 'Cinzel', serif; font-size: 2.5rem; justify-content: center; flex-wrap: wrap; }
         .countdown div { display: flex; flex-direction: column; align-items: center; }
         .countdown span { font-size: 1.1rem; font-family: 'Cormorant Garamond', serif; color: #bbb; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px;}
 
-        /* --- Strict 100vh Couple Section --- */
+        /* --- STRICT 100VH Section & Fixed Padding --- */
         #couple-section { 
             height: 100vh; max-height: 100vh; overflow: hidden; padding: 0; 
         }
-        #couple-section .section-title { margin-top: 2vh; margin-bottom: 2vh; }
+        #couple-section .section-title { 
+            margin-top: 10vh; /* Adds critical breathing room from the border */
+        }
         
         .couple-container {
             display: flex; align-items: center; justify-content: center;
-            max-width: 1400px; width: 100%; height: 80vh; position: relative; z-index: 5;
+            max-width: 1400px; width: 100%; position: relative; z-index: 5;
+            height: 80vh; /* Restricts the contents so they don't stretch */
         }
         .couple-image-wrapper { flex-shrink: 0; position: relative; z-index: 2; height: 100%; display: flex; align-items: center; }
         
@@ -234,17 +239,20 @@
             .section-title { font-size: 2.2rem; }
             
             .gold-border-frame { background-size: 40px 40px; top: 2vh; bottom: 2vh; left: 3vw; right: 3vw; }
+            
+            /* Reduced mobile margin so titles don't get squished */
+            #couple-section .section-title { margin-top: 3vh; }
 
-            /* Re-ordered Mobile Layout: Groom on Top, Image, Bride on Bottom */
-            .couple-container { flex-direction: column; justify-content: center; gap: 0; }
-            .couple-text { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 90%; max-width: 340px; padding: 1.5rem; }
-            .couple-image { height: 45vh; max-height: 500px; transform: scale(1.15); margin: 0; }
+            /* New MOBILE REORDERING: Groom on Top */
+            .couple-container { flex-direction: column; justify-content: flex-start; height: auto; padding-top: 1rem; }
+            .couple-text { position: relative; top: auto; left: auto; right: auto; bottom: auto; width: 100%; max-width: 100%; margin: 1rem 0; padding: 1.5rem; }
+            .groom-bio { border-left: none; border-top: 2px solid var(--gold); margin-bottom: 0; }
+            .bride-bio { border-right: none; border-bottom: 2px solid var(--gold); margin-top: 0; }
             
-            .groom-bio { margin-bottom: -35px; border-left: none; border-bottom: 2px solid var(--gold); z-index: 4; }
-            .bride-bio { margin-top: -35px; border-right: none; border-top: 2px solid var(--gold); z-index: 4; }
-            .couple-text h3 { font-size: 1.2rem; margin-bottom: 0.8rem; }
-            .couple-text p { font-size: 0.9rem; }
+            .couple-image { height: auto; width: 100%; max-height: 40vh; transform: scale(1.15); margin: 0.5rem 0; }
             
+            #couple-section { height: auto; max-height: none; overflow: visible; padding-bottom: 4rem; }
+
             .details-grid { flex-direction: column; gap: 1.5rem; align-items: center; }
             .detail-card { width: 100%; }
             .countdown { gap: 1.5rem; font-size: 1.8rem; }
@@ -378,6 +386,7 @@
             "HER00952.jpg", "HER00689.jpg", "HER00667.jpg", "HER00061.jpg", "HER09784.jpg"
         ];
 
+        // --- Core Strict Tuning ---
         const zSpacing = 6; 
         const tunnelDepth = images.length * zSpacing;
         const strictDuration = 21; 
@@ -394,10 +403,19 @@
 
         // --- 2. Loading Management ---
         const manager = new THREE.LoadingManager();
+        
+        manager.onError = function(url) {
+            console.warn('Warning: Could not load ' + url + '. Continuing anyway.');
+            hideLoader();
+        };
+
         manager.onProgress = function (url, itemsLoaded, itemsTotal) {
             document.getElementById('progress').style.width = (itemsLoaded / itemsTotal * 100) + '%';
         };
-        manager.onLoad = function () {
+        
+        manager.onLoad = function () { hideLoader(); };
+
+        function hideLoader() {
             setTimeout(() => {
                 document.getElementById('loader').style.opacity = '0';
                 setTimeout(() => {
@@ -406,7 +424,7 @@
                     ScrollTrigger.refresh();
                 }, 1000);
             }, 500);
-        };
+        }
 
         // --- 3. 3D Setup ---
         const canvas = document.getElementById('webgl-canvas');
@@ -417,9 +435,16 @@
         const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
         
+        // BOKEH FIX: Set focus deeper into the tunnel (25.0) and widened aperture
         const composer = new THREE.EffectComposer(renderer);
         composer.addPass(new THREE.RenderPass(scene, camera));
-        const bokehPass = new THREE.BokehPass(scene, camera, { focus: 8.0, aperture: 0.002, maxblur: 0.015, width: window.innerWidth, height: window.innerHeight });
+        const bokehPass = new THREE.BokehPass(scene, camera, { 
+            focus: 25.0, 
+            aperture: 0.001, 
+            maxblur: 0.01, 
+            width: window.innerWidth, 
+            height: window.innerHeight 
+        });
         composer.addPass(bokehPass);
 
         const ambientGroup = new THREE.Group();
@@ -433,7 +458,6 @@
         const textureLoader = new THREE.TextureLoader(manager);
         const planes = [];
 
-        // Check if device is mobile to multiply vertical photo scattering
         const isMobileDevice = window.innerWidth < 768;
         const verticalSpread = isMobileDevice ? 2.5 : 1; 
 
@@ -444,23 +468,22 @@
                 const width = height * imgAspect;
                 const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.95 }));
 
-                // Dynamic Placement
                 const placementPattern = index % 4;
                 let posX = 0; let posY = 0;
 
-                if (placementPattern === 0) { // Left
+                if (placementPattern === 0) { 
                     posX = -(4 + Math.random() * 3);
                     posY = (Math.random() - 0.5) * 4 * verticalSpread;
                     plane.rotation.y = -0.15;
-                } else if (placementPattern === 1) { // Right
+                } else if (placementPattern === 1) { 
                     posX = (4 + Math.random() * 3);
                     posY = (Math.random() - 0.5) * 4 * verticalSpread;
                     plane.rotation.y = 0.15;
-                } else if (placementPattern === 2) { // Top
+                } else if (placementPattern === 2) { 
                     posX = (Math.random() - 0.5) * 6;
                     posY = (3.5 + Math.random() * 2.5) * verticalSpread;
                     plane.rotation.x = 0.15;
-                } else { // Bottom
+                } else { 
                     posX = (Math.random() - 0.5) * 6;
                     posY = -(3.5 + Math.random() * 2.5) * verticalSpread;
                     plane.rotation.x = -0.15;
@@ -480,7 +503,7 @@
         let isUserScrollLocked = false;
         let autoScrollTween;
         let isInsideTunnel = false;
-        let allowTunnelReset = false; // Prevents Safari bounce bugs
+        let allowTunnelReset = false;
 
         // --- 5. Interlude Scroll Lock ---
         function interceptScroll(e) {
@@ -510,22 +533,22 @@
         window.addEventListener('wheel', interceptScroll, {passive: false});
         window.addEventListener('keydown', interceptScroll, {passive: false});
 
-        // --- 6. The Chevron Gateway & SAFARI COMPATIBLE Reset Fix ---
+        // --- 6. The Chevron Gateway & Safari Scroll Fix ---
         document.getElementById('scroll-to-photos').addEventListener('click', () => {
             isTunnelUnlocked = true;
             allowTunnelReset = false; 
             document.documentElement.style.scrollSnapType = 'none'; 
+            
+            bgAudio.currentTime = 0; 
+            bgAudio.volume = 0;
+            bgAudio.play().catch(e => e); 
             
             gsap.to(window, { 
                 scrollTo: "#tunnel-trigger", 
                 duration: 1.5, 
                 ease: "power2.inOut",
                 onComplete: () => {
-                    bgAudio.currentTime = 0; bgAudio.volume = 0;
-                    let playPromise = bgAudio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => { gsap.to(bgAudio, { volume: 1, duration: 1 }); }).catch(e => e);
-                    }
+                    gsap.to(bgAudio, { volume: 1, duration: 1 }); 
 
                     isUserScrollLocked = true;
                     setTimeout(() => { isUserScrollLocked = false; }, 3000);
@@ -538,7 +561,6 @@
                         ease: "none",
                         onComplete: () => { 
                             document.documentElement.style.scrollSnapType = 'y mandatory'; 
-                            // SAFARI FIX: Wait 1 second after landing before allowing reset to ignore native bounce
                             setTimeout(() => { allowTunnelReset = true; }, 1000);
                         }
                     });
@@ -546,7 +568,6 @@
             });
         });
 
-        // Safari Manual Interrupt Allow
         function manualInterrupt() {
             if (!isUserScrollLocked && autoScrollTween && autoScrollTween.isActive() && isTunnelUnlocked) {
                 autoScrollTween.kill();
@@ -557,12 +578,11 @@
         window.addEventListener('wheel', manualInterrupt, {passive: true});
         window.addEventListener('touchmove', manualInterrupt, {passive: true});
 
-        // SAFARI COMPATIBLE HARD RESET
         ScrollTrigger.create({
             trigger: "#details-section",
-            start: "top 80%", // Only triggers if user physically scrolls 20% back up
+            start: "top 80%", 
             onLeaveBack: () => {
-                if(!allowTunnelReset) return; // Ignores GSAP scrollTo bounces
+                if(!allowTunnelReset) return; 
                 isTunnelUnlocked = false; 
                 gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
                 if(autoScrollTween) autoScrollTween.kill();

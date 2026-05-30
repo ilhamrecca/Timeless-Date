@@ -606,7 +606,7 @@
                     if(autoScrollTween) autoScrollTween.kill();
                     
                     autoScrollTween = gsap.to(window, {
-                        scrollTo: { y: "#details-section", offsetY: -1000, autoKill: false },
+                        scrollTo: { y: "#details-section", offsetY: -30, autoKill: false },
                         duration: strictDuration,
                         ease: "none",
                         onComplete: () => { 
@@ -630,20 +630,18 @@
 
         // --- THE ULTIMATE SAFARI RESET FIX ---
         // Attached to the tunnel, NOT the Details section. Safari can bounce all it wants on Details.
-        ScrollTrigger.create({
-            trigger: "#tunnel-trigger",
-            start: "bottom 30%", // User must scroll way back up into the falling photos to trigger a reset
-            onEnterBack: () => {
+       ScrollTrigger.create({
+            trigger: "#details-section",
+            start: "top 40%", 
+            onLeaveBack: () => {
                 if(!allowTunnelReset) return; 
                 isTunnelUnlocked = false; 
-                allowTunnelReset = false;
                 gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
                 if(autoScrollTween) autoScrollTween.kill();
-                gsap.set(window, { scrollTo: "#details-section" });
+                gsap.set(window, { scrollTo: "#interlude-section" });
                 document.documentElement.style.scrollSnapType = 'y mandatory'; 
             }
         });
-
         // --- 7. Connecting Animations ---
         ScrollTrigger.create({
             trigger: "#tunnel-trigger",

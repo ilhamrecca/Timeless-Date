@@ -133,11 +133,13 @@
         .countdown div { display: flex; flex-direction: column; align-items: center; }
         .countdown span { font-size: 1.1rem; font-family: 'Cormorant Garamond', serif; color: #bbb; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px;}
 
-        /* --- Desktop Couple Section --- */
+        /* --- STRICT 100VH Section & Fixed Padding --- */
         #couple-section { 
             height: 100vh; max-height: 100vh; overflow: hidden; padding: 0; 
         }
-        #couple-section .section-title { margin-top: 10vh; }
+        #couple-section .section-title { 
+            margin-top: 10vh; 
+        }
         
         .couple-container {
             display: flex; align-items: center; justify-content: center;
@@ -224,11 +226,12 @@
 
         @keyframes bounce { 0%, 100% {transform: translateY(0) rotate(45deg);} 50% {transform: translateY(15px) rotate(45deg);} }
 
-        /* --- Strictly Controlled Mobile Responsive Design --- */
+        /* --- Mobile Responsive Optimizations --- */
         @media (max-width: 1024px) {
             .groom-bio { left: 1%; width: 320px; }
             .bride-bio { right: 1%; width: 320px; }
         }
+        
         @media (max-width: 768px) {
             .the-wedding-of { font-size: 1.1rem; margin-bottom: -5px; }
             .hero-title { font-size: 3.8rem; padding: 10px 20px; }
@@ -238,24 +241,30 @@
             
             .gold-border-frame { background-size: 40px 40px; top: 2vh; bottom: 2vh; left: 3vw; right: 3vw; }
             
-            /* Bulletproof Mobile Couple Section Fixes */
+            /* --- FIX: Mobile Couple Section Overflow --- */
             #couple-section { 
-                height: 95vh; /* Prevents overflow into other sections */
-                padding-top: 2vh; 
+                height: 100dvh !important; /* Dynamic Viewport Height fixes Safari address bar cutoff */
+                max-height: 100dvh !important; 
+                overflow: hidden !important; 
+                padding: 6dvh 0 !important; /* Ensures it stays inside the borders */
             }
-            #couple-section .section-title { margin-top: 5vh; margin-bottom: 2vh; }
+            #couple-section .section-title { 
+                margin-top: 1vh !important; 
+                margin-bottom: 1vh !important; 
+            }
 
             .couple-container { 
-                flex-direction: column; justify-content: center; height: 75vh; gap: 0; padding-top: 0; 
+                flex-direction: column; justify-content: center; height: 75dvh; gap: 0; padding-top: 0; 
             }
             
             .couple-text { 
-                position: relative !important; top: auto !important; bottom: auto !important; 
+                position: relative !important; 
+                top: auto !important; bottom: auto !important; 
                 left: 0 !important; right: 0 !important; 
-                width: 85% !important; /* Forces strict horizontal margins */
+                width: 85% !important; /* Keeps it strictly inside the screen */
                 max-width: 320px !important; 
                 margin: 0 auto !important; 
-                padding: 1rem !important; /* Shrunk padding to fit */
+                padding: 1rem 1.2rem !important; /* Tighter padding */
             }
             
             .groom-bio { border-left: none !important; border-bottom: 2px solid var(--gold) !important; margin-bottom: -15px !important; z-index: 4; }
@@ -264,7 +273,11 @@
             .couple-text h3 { font-size: 1.1rem; margin-bottom: 0.5rem; line-height: 1.4; }
             .couple-text p { font-size: 0.85rem; line-height: 1.4; }
             
-            .couple-image { height: 35vh !important; max-height: 350px !important; width: auto; margin: 0 auto !important; transform: scale(1.1); }
+            .couple-image { 
+                height: 28dvh !important; /* Shrunk slightly to guarantee bride text fits below */
+                max-height: 250px !important; 
+                width: auto; margin: 0.5rem auto !important; transform: scale(1.1); 
+            }
             
             /* Other mobile fixes */
             .details-grid { flex-direction: column; gap: 1.5rem; align-items: center; }
@@ -516,8 +529,7 @@
         let isUserScrollLocked = false;
         let autoScrollTween;
         let isInsideTunnel = false;
-        let hasLandedOnDetails = false; // NEW strict tracker for Safari
-        let detailsScrollOffset = 0;
+        let allowTunnelReset = false;
 
         // --- 5. Interlude Scroll Lock ---
         function interceptScroll(e) {
@@ -550,7 +562,7 @@
         // --- 6. The Chevron Gateway & Safari Scroll Fix ---
         document.getElementById('scroll-to-photos').addEventListener('click', () => {
             isTunnelUnlocked = true;
-            hasLandedOnDetails = false; 
+            allowTunnelReset = false; 
             document.documentElement.style.scrollSnapType = 'none'; 
             
             bgAudio.currentTime = 0; 
@@ -569,46 +581,41 @@
 
                     if(autoScrollTween) autoScrollTween.kill();
                     
+                    // FIX: Scroll slightly deeper into details section (offsetY: -30)
                     autoScrollTween = gsap.to(window, {
-                        scrollTo: { y: "#details-section", autoKill: false },
+                        scrollTo: { y: "#details-section", offsetY: -30, autoKill: false },
                         duration: strictDuration,
                         ease: "none",
                         onComplete: () => { 
                             document.documentElement.style.scrollSnapType = 'y mandatory'; 
-                            // Give Safari 2.5 seconds to settle its native bouncing physics before enabling reset
-                            setTimeout(() => { 
-                                hasLandedOnDetails = true; 
-                                detailsScrollOffset = window.scrollY;
-                            }, 2500); 
+                            setTimeout(() => { allowTunnelReset = true; }, 2500);
                         }
                     });
                 }
             });
         });
 
-        // Vanilla JS Manual Interrupt 
         function manualInterrupt() {
             if (!isUserScrollLocked && autoScrollTween && autoScrollTween.isActive() && isTunnelUnlocked) {
                 autoScrollTween.kill();
                 document.documentElement.style.scrollSnapType = 'y mandatory';
-                setTimeout(() => { 
-                    hasLandedOnDetails = true; 
-                    detailsScrollOffset = window.scrollY;
-                }, 2500);
+                setTimeout(() => { allowTunnelReset = true; }, 2500);
             }
         }
         window.addEventListener('wheel', manualInterrupt, {passive: true});
         window.addEventListener('touchmove', manualInterrupt, {passive: true});
 
-        // SAFARI BULLETPROOF RESET: Only activates if user physically scrolls up by more than 150 pixels AFTER settling
-        window.addEventListener('scroll', () => {
-            if (hasLandedOnDetails && isTunnelUnlocked) {
-                if (window.scrollY < detailsScrollOffset - 150) {
-                    hasLandedOnDetails = false;
-                    isTunnelUnlocked = false; 
-                    gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
-                    gsap.set(window, { scrollTo: "#interlude-section" });
-                }
+        // DEEP SAFARI TRIPWIRE (Must swipe 40% back up the screen)
+        ScrollTrigger.create({
+            trigger: "#details-section",
+            start: "top 40%", 
+            onLeaveBack: () => {
+                if(!allowTunnelReset) return; 
+                isTunnelUnlocked = false; 
+                gsap.to(bgAudio, { volume: 0, duration: 1, onComplete: () => bgAudio.pause() });
+                if(autoScrollTween) autoScrollTween.kill();
+                gsap.set(window, { scrollTo: "#interlude-section" });
+                document.documentElement.style.scrollSnapType = 'y mandatory'; 
             }
         });
 
